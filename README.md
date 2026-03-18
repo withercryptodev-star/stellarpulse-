@@ -16,7 +16,7 @@ StellarPulse is an open-source monitoring bot that watches the Stellar blockchai
 
 Most blockchain activity goes unnoticed. Block explorers exist, but they require you to already know what to look for. StellarPulse flips this — it watches everything and surfaces what matters, in plain English, to anyone following the account.
 
-**Live Twitter feed:** [@StellarPulseBot](https://twitter.com/StellarPulseBot)
+**Live Twitter feed:** [@StellarMonitor](https://x.com/StellarMonitor)
 
 ---
 
