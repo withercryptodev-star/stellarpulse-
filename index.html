@@ -428,13 +428,14 @@ footer{border-top:1px solid var(--bg-edge);padding:24px 40px}
     <div class="fp-row">
       <div class="fp-label">Period</div>
       <div class="fp-chips" id="fc-period">
-        <div class="chip on"  onclick="setPeriod(this,1,'Last 1h')">1h</div>
-        <div class="chip"     onclick="setPeriod(this,24,'Last 24h')">24h</div>
-        <div class="chip"     onclick="setPeriod(this,72,'Last 3 days')">3d</div>
-        <div class="chip"     onclick="setPeriod(this,168,'Last 7 days')">7d</div>
-        <div class="chip"     onclick="setPeriod(this,336,'Last 2 weeks')">2w</div>
-        <div class="chip"     onclick="setPeriod(this,720,'Last 30 days')">30d</div>
-        <div class="chip"     onclick="setPeriod(this,8760,'Last year')">1y</div>
+        <div class="chip on"  onclick="setPeriod(this,1)">1h</div>
+        <div class="chip"     onclick="setPeriod(this,24)">24h</div>
+        <div class="chip"     onclick="setPeriod(this,72)">3d</div>
+        <div class="chip"     onclick="setPeriod(this,168)">7d</div>
+        <div class="chip"     onclick="setPeriod(this,336)">2w</div>
+        <div class="chip"     onclick="setPeriod(this,720)">30d</div>
+        <div class="chip"     onclick="setPeriod(this,8760)">1y</div>
+        <div class="chip"     onclick="setPeriod(this,0)">All</div>
       </div>
     </div>
 
@@ -780,8 +781,12 @@ async function scan(){
   _fetchAbort=true;await new Promise(r=>setTimeout(r,50));_fetchAbort=false;
   $('results-meta').style.display='none';
   _scanOps=[];
-  const cutoffDate=new Date(Date.now()-filters.periodHours*3600000);
+  // 0 = все время, иначе вычисляем дату отсечения
+  const isAllTime = filters.periodHours === 0;
+  const cutoffDate = isAllTime ? new Date(0) : new Date(Date.now()-filters.periodHours*3600000);
   const label=document.querySelector('#fc-period .chip.on')?.textContent||'';
+  // Лимит страниц: для "All" — 200 страниц (40000 операций), иначе по периоду
+  const maxPages = isAllTime ? 200 : filters.periodHours <= 1 ? 2 : filters.periodHours <= 24 ? 5 : filters.periodHours <= 168 ? 15 : 50;
   try{
     let cursor=null,pages=0,allOps=[];
     const isWallet=q.length>=56&&q.startsWith('G');
@@ -798,23 +803,26 @@ async function scan(){
       batch.forEach(op=>enrichOp(op));
       allOps.push(...batch);
       pages++;
-      const oldest=new Date(batch[batch.length-1].created_at);
-      if(oldest<cutoffDate)break;
+      // Для не-"All" периодов — останавливаемся когда дошли до даты отсечения
+      if(!isAllTime){
+        const oldest=new Date(batch[batch.length-1].created_at);
+        if(oldest<cutoffDate)break;
+      }
       const next=d?._links?.next?.href;
       if(!next)break;
       const m=next.match(/cursor=([^&]+)/);
       cursor=m?m[1]:null;
       if(!cursor)break;
-      if(pages>=50)break;
+      if(pages>=maxPages)break;
       showProgress(allOps.length,pages,label);
       await new Promise(r=>setTimeout(r,100));
     }
     if(_fetchAbort)return;
-    _scanOps=allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
+    _scanOps = isAllTime ? allOps : allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
     renderResults(applyFilters(_scanOps));
-    if(pages>=50){
+    if(pages>=maxPages){
       const m=$('results-meta');
-      if(m)m.innerHTML+=`<span style="color:var(--txt3);font-size:9px"> · 50 page limit reached</span>`;
+      if(m)m.innerHTML+=`<span style="color:var(--txt3);font-size:9px"> · ${pages} pages loaded (${allOps.length.toLocaleString()} ops)</span>`;
     }
   }catch(e){$('sres').innerHTML=`<div class="rempty">Error: ${e.message}</div>`;}
 }
