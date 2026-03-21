@@ -1,4 +1,4 @@
-# 🌟 StellarPulse
+# 🌟 StellarMonitor
 
 > **Real-time on-chain intelligence bot for the Stellar Network — surfacing whale moves, DEX activity, and Soroban events directly to Twitter/X.**
 
@@ -10,7 +10,7 @@
 
 ---
 
-## What is StellarPulse?
+## What is StellarMonitor?
 
 StellarPulse is an open-source monitoring bot that watches the Stellar blockchain in real time and automatically posts notable on-chain activity to a public Twitter/X account.
 
