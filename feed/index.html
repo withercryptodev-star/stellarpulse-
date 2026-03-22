@@ -161,7 +161,7 @@ function animNum(el,val,fmt){
 // ── Fetch от API (история за 24ч) ──────────────────────────────────────────
 async function fetchFromAPI(){
   try{
-    const r=await fetch(`${API}/api/alerts?limit=1000`);
+    const r=await fetch(`${API}/api/alerts?limit=5000`);
     if(!r.ok) return;
     const d=await r.json();
     const alerts=d.alerts||[];
@@ -211,6 +211,9 @@ async function fetchFromAPI(){
     animNum($('m-alerts'), allFeed.length, v=>v);
     animNum($('m-usdc'), usdc24, fN);
     animNum($('m-biggest'), big24, fU);
+    // Persist to localStorage
+    try{localStorage.setItem('sm_stats',JSON.stringify({alerts:allFeed.length,usdc:usdc24,big:big24,ts:Date.now()}));}catch(e){}
+    try{localStorage.setItem('sm_feed_cache',JSON.stringify(allFeed.slice(0,500)));}catch(e){}
 
     // Alert types
     $('t-whale-usdc').textContent=wUsdc;
@@ -223,6 +226,7 @@ async function fetchFromAPI(){
 
     renderBars();
     if(currentPage===0) renderPage(0);
+    saveToStorage();
 
   }catch(e){console.warn('API:',e);}
 }
@@ -372,9 +376,29 @@ setInterval(fetchFromAPI, 30000);
 setInterval(fetchPrice, 60000);
 
 // ── Старт ─────────────────────────────────────────────────────────────────
+// Restore from localStorage instantly
+try{
+  const cached=localStorage.getItem('sm_feed_cache');
+  const stats=localStorage.getItem('sm_stats');
+  if(cached){
+    allFeed=JSON.parse(cached);
+    // Filter to 24h only
+    const cutoff=Date.now()-86400000;
+    allFeed=allFeed.filter(a=>new Date(a.ts).getTime()>cutoff);
+    if(allFeed.length) renderPage(0);
+  }
+  if(stats){
+    const s=JSON.parse(stats);
+    if(Date.now()-s.ts<86400000){ // only use if less than 24h old
+      $('m-alerts').textContent=s.alerts;
+      $('m-usdc').textContent=fN(s.usdc);
+      $('m-biggest').textContent=fU(s.big);
+    }
+  }
+}catch(e){}
 fetchPrice();
-fetchFromAPI(); // сначала история за 24ч
-setTimeout(fetchLive, 1000); // потом реалтайм
+fetchFromAPI();
+setTimeout(fetchLive, 1000);
 </script>
 </body>
 </html>
