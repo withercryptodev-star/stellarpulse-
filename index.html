@@ -3,90 +3,80 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StellarMonitor — On-Chain Intelligence for Stellar</title>
+<title>StellarMonitor — Live Feed</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#02040a;--panel:rgba(8,14,28,0.92);
-  --edge:rgba(255,255,255,0.07);--edge2:rgba(255,255,255,0.03);
-  --cyan:#00c8ff;--green:#00e87a;--orange:#ff8c00;--red:#ff3d5a;
-  --white:#f0f4fa;--gray1:#8da0b8;--gray2:#4a6380;
-  --mono:'DM Mono',monospace;--sans:'Outfit',sans-serif;
-}
+:root{--bg:#05080d;--dark:#090e16;--panel:#0c1220;--panel2:#0f1628;--edge:rgba(255,255,255,0.07);--edge2:rgba(255,255,255,0.03);--cyan:#00c8ff;--green:#00e87a;--orange:#ff8c00;--red:#ff3d5a;--white:#f0f4fa;--gray1:#8da0b8;--gray2:#4a6380;--mono:'DM Mono',monospace;--sans:'Outfit',sans-serif;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--white);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:200;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(2,4,10,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(5,8,13,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--white);font-weight:700;font-size:15px}
-.logo-pulse{position:relative;width:8px;height:8px}
-.logo-pulse::before,.logo-pulse::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--cyan)}
-.logo-pulse::after{background:transparent;border:1px solid var(--cyan);animation:ripple 2s ease-out infinite}
-@keyframes ripple{0%{transform:scale(1);opacity:.8}100%{transform:scale(3.5);opacity:0}}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
 .nav-center{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:4px}
 .nav-link{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray1);text-decoration:none;padding:7px 16px;border-radius:3px;transition:all .15s;border:1px solid transparent}
 .nav-link:hover{color:var(--white);background:rgba(255,255,255,.05);border-color:var(--edge)}
 .nav-link.active{color:var(--cyan);border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.06)}
 .nav-cta{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 18px;border:1px solid var(--cyan);color:var(--cyan);border-radius:3px;text-decoration:none;transition:all .15s}
 .nav-cta:hover{background:var(--cyan);color:var(--bg)}
+.page{max-width:1100px;margin:0 auto;padding:88px 40px 40px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.page-title{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.live-badge{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--green)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* GLOBE */
-#globe-container{position:fixed;inset:0;top:56px;width:100%;height:calc(100vh - 56px);z-index:1}
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stat-box{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:16px 20px}
+.sb-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px}
+.sb-val{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--white);overflow:hidden;height:26px;display:flex;align-items:center}
+.sb-val.cyan{color:var(--cyan)}.sb-val.green{color:var(--green)}
 
-/* HERO */
-.hero{position:fixed;top:56px;left:0;right:0;bottom:52px;z-index:10;pointer-events:none;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 80px}
-.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:20px;pointer-events:all;opacity:0;animation:fade-up .6s .3s forwards}
-.hero-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-h1{font-size:clamp(32px,4.5vw,64px);font-weight:800;line-height:.95;letter-spacing:-2px;margin-bottom:18px;opacity:0;animation:fade-up .6s .4s forwards}
-h1 .dim{color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.18)}
-h1 .hi{color:var(--cyan)}
-.hero-sub{font-family:var(--mono);font-size:12px;line-height:2;color:var(--gray1);max-width:400px;margin-bottom:32px;opacity:0;animation:fade-up .6s .5s forwards}
-.tool-cards{display:flex;gap:10px;flex-wrap:wrap;pointer-events:all;opacity:0;animation:fade-up .6s .6s forwards}
-.tool-card{background:rgba(2,4,10,0.82);border:1px solid var(--edge);border-radius:4px;padding:13px 18px;text-decoration:none;color:var(--white);transition:all .2s;backdrop-filter:blur(16px);min-width:140px}
-.tool-card:hover{border-color:var(--cyan);background:rgba(0,200,255,.07);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,200,255,.12)}
-.tc-icon{font-size:18px;margin-bottom:6px}
-.tc-title{font-size:13px;font-weight:600;margin-bottom:2px}
-.tc-sub{font-family:var(--mono);font-size:10px;color:var(--gray2)}
+/* FEED */
+.feed-layout{display:grid;grid-template-columns:1fr 280px;gap:20px}
+.feed-table{background:var(--panel);border:1px solid var(--edge);border-radius:4px;overflow:hidden}
+.feed-hdr{display:grid;grid-template-columns:90px 1fr 110px 90px;padding:10px 20px;background:var(--panel2);border-bottom:1px solid var(--edge);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2)}
+.feed-row{display:grid;grid-template-columns:90px 1fr 110px 90px;padding:13px 20px;border-bottom:1px solid var(--edge2);cursor:pointer;transition:background .1s;animation:row-in .25s ease forwards;opacity:0}
+.feed-row:hover{background:rgba(0,200,255,.03)}
+.feed-row:last-child{border-bottom:none}
+@keyframes row-in{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+.pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:2px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase}
+.pw{background:rgba(255,140,0,.12);color:var(--orange)}.ps{background:rgba(0,200,255,.1);color:var(--cyan)}.pm{background:rgba(160,80,255,.1);color:#b87fff}
+.fdesc{font-size:13px;font-weight:500;color:var(--white)}.fsub{font-family:var(--mono);font-size:10px;color:var(--gray2);margin-top:2px}
+.famt{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--white);text-align:right}.famt.big{color:var(--orange)}.famt.huge{color:var(--red)}
+.ftime{font-family:var(--mono);font-size:10px;color:var(--gray2);text-align:right}
 
-/* TX FEED right side */
-.tx-feed{position:fixed;right:24px;top:80px;z-index:10;width:260px;pointer-events:none}
-.tx-item{background:rgba(2,4,10,0.88);border:1px solid var(--edge);border-radius:3px;padding:10px 14px;margin-bottom:6px;backdrop-filter:blur(16px);animation:slide-in .4s ease forwards;opacity:0;cursor:pointer;pointer-events:all;transition:border-color .15s}
-.tx-item:hover{border-color:var(--cyan)}
-@keyframes slide-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
-.tx-type{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);margin-bottom:3px}
-.tx-amount{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--white)}
-.tx-amount.big{color:var(--orange)}.tx-amount.huge{color:var(--red)}
-.tx-sub{font-family:var(--mono);font-size:9px;color:var(--gray2);margin-top:2px}
-.tx-time{font-family:var(--mono);font-size:9px;color:var(--gray2);float:right;margin-top:-18px}
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--edge);background:var(--panel2)}
+.pg-info{font-family:var(--mono);font-size:10px;color:var(--gray2)}
+.pg-btns{display:flex;gap:6px}
+.pg-btn{font-family:var(--mono);font-size:10px;padding:5px 12px;border:1px solid var(--edge);background:transparent;color:var(--gray1);border-radius:2px;cursor:pointer;transition:all .15s}
+.pg-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}
+.pg-btn:disabled{opacity:.3;cursor:default}
+.pg-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06)}
 
-/* STATS BAR */
-.stats-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(2,4,10,0.94);border-top:1px solid var(--edge);backdrop-filter:blur(20px);height:52px;display:flex;align-items:center;padding:0 40px;gap:0;overflow-x:auto}
-.stat-item{display:flex;align-items:center;gap:12px;padding:0 28px;border-right:1px solid var(--edge);height:100%;flex-shrink:0}
-.stat-item:first-child{padding-left:0}
-.stat-item:last-child{border-right:none;margin-left:auto}
-.s-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2)}
-.s-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--white);overflow:hidden;height:22px;display:flex;align-items:center;min-width:60px}
-.s-val.cyan{color:var(--cyan)}.s-val.green{color:var(--green)}
-
-/* TICKER */
-.ticker{position:fixed;top:56px;left:0;right:0;z-index:50;height:26px;background:rgba(2,4,10,0.75);border-bottom:1px solid var(--edge2);overflow:hidden;display:flex;align-items:center}
-.ticker-t{display:flex;white-space:nowrap;animation:tick 50s linear infinite}
-@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.ti{display:flex;align-items:center;gap:8px;padding:0 24px;font-family:var(--mono);font-size:10px;border-right:1px solid var(--edge2);color:var(--gray2)}
-.ti b{color:var(--white)}.ti .u{color:var(--green);font-size:8px}
-
-@keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:768px){.hero{padding:0 20px}.nav-center{display:none}.tx-feed{display:none}.stats-bar{padding:0 16px}}
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:16px}
+.widget{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:16px}
+.wt{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:12px}
+.wr{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--edge2)}
+.wr:last-child{border-bottom:none}
+.wk{font-family:var(--mono);font-size:10px;color:var(--gray2)}.wv{font-family:var(--mono);font-size:11px;color:var(--cyan)}
+.ibr{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.ibl{font-family:var(--mono);font-size:9px;color:var(--gray2);width:48px}
+.ibt{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.ibf{height:100%;border-radius:2px;transition:width 1s ease}
+.ibc{font-family:var(--mono);font-size:9px;color:var(--gray2);width:18px;text-align:right}
+@media(max-width:768px){.feed-layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-
 <nav>
-  <a href="/" class="logo"><div class="logo-pulse"></div>StellarMonitor</a>
+  <a href="/" class="logo"><div class="logo-dot"></div>StellarMonitor</a>
   <div class="nav-center">
-    <a href="/feed"    class="nav-link">Live Feed</a>
+    <a href="/feed"    class="nav-link active">Live Feed</a>
     <a href="/scanner" class="nav-link">Scanner</a>
     <a href="/graph"   class="nav-link">Graph</a>
     <a href="/docs"    class="nav-link">Docs</a>
@@ -94,274 +84,69 @@ h1 .hi{color:var(--cyan)}
   <a href="https://x.com/StellarMonitor" class="nav-cta" target="_blank">Follow ↗</a>
 </nav>
 
-<div class="ticker"><div class="ticker-t" id="tkr"></div></div>
-<div id="globe-container"></div>
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Live Feed</div>
+    <div class="live-badge"><div class="live-dot"></div><span id="upd-label">Live</span></div>
+  </div>
 
-<div class="hero">
-  <div class="hero-tag"><div class="hero-tag-dot"></div>Live · Stellar Mainnet</div>
-  <h1>On-chain<br><span class="dim">intelligence</span><br>for <span class="hi">Stellar</span></h1>
-  <p class="hero-sub">Real-time monitoring of whale transfers,<br>SDEX trades and Soroban events.</p>
-  <div class="tool-cards">
-    <a href="/feed"    class="tool-card"><div class="tc-icon">📡</div><div class="tc-title">Live Feed</div><div class="tc-sub">Real-time alerts</div></a>
-    <a href="/scanner" class="tool-card"><div class="tc-icon">🔍</div><div class="tc-title">Scanner</div><div class="tc-sub">Analyze wallet</div></a>
-    <a href="/graph"   class="tool-card"><div class="tc-icon">🕸</div><div class="tc-title">Graph</div><div class="tc-sub">Connection map</div></a>
-    <a href="/docs"    class="tool-card"><div class="tc-icon">📄</div><div class="tc-title">Docs</div><div class="tc-sub">API reference</div></a>
+  <div class="stats-row">
+    <div class="stat-box"><div class="sb-label">XLM Price</div><div class="sb-val cyan" id="m-price">—</div></div>
+    <div class="stat-box"><div class="sb-label">Alerts today (24h)</div><div class="sb-val" id="m-alerts">—</div></div>
+    <div class="stat-box"><div class="sb-label">USDC Volume 24h</div><div class="sb-val green" id="m-usdc">—</div></div>
+    <div class="stat-box"><div class="sb-label">Biggest tx today</div><div class="sb-val" id="m-biggest">—</div></div>
+  </div>
+
+  <div class="feed-layout">
+    <div class="feed-table">
+      <div class="feed-hdr"><div>Type</div><div>Details</div><div style="text-align:right">Amount</div><div style="text-align:right">Time</div></div>
+      <div id="fbody"><div style="padding:32px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)">Loading...</div></div>
+      <div class="pagination" id="pagination" style="display:none">
+        <div class="pg-info" id="pg-info"></div>
+        <div class="pg-btns" id="pg-btns"></div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="widget">
+        <div class="wt">Volume Distribution</div>
+        <div class="ibr"><div class="ibl">$10M+</div><div class="ibt"><div class="ibf" id="ib4" style="width:0%;background:var(--red)"></div></div><div class="ibc" id="ic4">0</div></div>
+        <div class="ibr"><div class="ibl">$1M+</div><div class="ibt"><div class="ibf" id="ib3" style="width:0%;background:var(--orange)"></div></div><div class="ibc" id="ic3">0</div></div>
+        <div class="ibr"><div class="ibl">$250K+</div><div class="ibt"><div class="ibf" id="ib2" style="width:0%;background:#f5c518"></div></div><div class="ibc" id="ic2">0</div></div>
+        <div class="ibr"><div class="ibl">$50K+</div><div class="ibt"><div class="ibf" id="ib1" style="width:0%;background:var(--cyan)"></div></div><div class="ibc" id="ic1">0</div></div>
+      </div>
+      <div class="widget">
+        <div class="wt">System Status</div>
+        <div class="wr"><div class="wk">Horizon API</div><div class="wv" style="color:var(--green)">● Online</div></div>
+        <div class="wr"><div class="wk">Bot</div><div class="wv" style="color:var(--green)" id="bot-status">● Online</div></div>
+        <div class="wr"><div class="wk">Last alert</div><div class="wv" id="last-alert" style="color:var(--gray2)">—</div></div>
+      </div>
+      <div class="widget">
+        <div class="wt">Alert Types (24h)</div>
+        <div class="wr"><div class="wk">Whale USDC</div><div class="wv" id="t-whale-usdc">0</div></div>
+        <div class="wr"><div class="wk">Whale XLM</div><div class="wv" id="t-whale-xlm">0</div></div>
+        <div class="wr"><div class="wk">SDEX</div><div class="wv" id="t-sdex">0</div></div>
+        <div class="wr"><div class="wk">Airdrop</div><div class="wv" id="t-airdrop">0</div></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="tx-feed" id="tx-feed"></div>
-
-<div class="stats-bar">
-  <div class="stat-item"><div class="s-label">XLM Price</div><div class="s-val cyan" id="s-price">—</div></div>
-  <div class="stat-item"><div class="s-label">Alerts 24h</div><div class="s-val" id="s-alerts">—</div></div>
-  <div class="stat-item"><div class="s-label">USDC Volume</div><div class="s-val green" id="s-usdc">—</div></div>
-  <div class="stat-item"><div class="s-label">Biggest tx</div><div class="s-val" id="s-biggest">—</div></div>
-  <div class="stat-item"><div class="s-label">Updated</div><div class="s-val" id="s-upd" style="font-size:11px;color:var(--gray1);min-width:70px">—</div></div>
-</div>
-
-
-<script>
-// ═══════════════════════════════════════════════════════════════════════════
-// GLOBE — Three.js r128, no ESM needed
-// ═══════════════════════════════════════════════════════════════════════════
-(function initGlobe(){
-  const container = document.getElementById('globe-container');
-  if(!container) return;
-
-  const W = ()=>container.clientWidth, H2 = ()=>container.clientHeight;
-  const canvas = document.createElement('canvas');
-  canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%';
-  container.appendChild(canvas);
-
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.setSize(W(),H2());
-  renderer.setClearColor(0x000008,1);
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.5;
-
-  const scene  = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, W()/H2(), 0.1, 1000);
-  camera.position.z = 2.65;
-
-  // Controls
-  const ctrl={drag:false,lx:0,ly:0,rx:0,ry:0,tx:0,ty:0};
-  canvas.addEventListener('mousedown',e=>{ctrl.drag=true;ctrl.lx=e.clientX;ctrl.ly=e.clientY;});
-  window.addEventListener('mousemove',e=>{
-    if(!ctrl.drag)return;
-    ctrl.tx+=(e.clientX-ctrl.lx)*.005; ctrl.ty+=(e.clientY-ctrl.ly)*.003;
-    ctrl.ty=Math.max(-1.1,Math.min(1.1,ctrl.ty));
-    ctrl.lx=e.clientX; ctrl.ly=e.clientY;
-  });
-  window.addEventListener('mouseup',()=>{ctrl.drag=false;});
-
-  const ll2v=(lat,lng,r=1)=>{
-    const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;
-    return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
-  };
-
-  // ── Globe group ────────────────────────────────────────────────────────────
-  const G = new THREE.Group(); scene.add(G);
-
-  // Ocean sphere — MeshPhongMaterial with custom gradient shader
-  const oceanMat = new THREE.MeshPhongMaterial({
-    color:            0x081830,
-    emissive:         new THREE.Color(0x0a3cff),
-    emissiveIntensity:0.15,
-    specular:         0x0a1e3d,
-    shininess:        20,
-  });
-  // Gradient: front lighter, back darker + subtle rim
-  oceanMat.onBeforeCompile = shader => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <dithering_fragment>',
-      `
-      float intensity = dot(normalize(vNormal), vec3(0.0, 0.0, 1.0));
-      gl_FragColor.rgb *= 0.5 + intensity * 0.7;
-      float rim = 1.0 - max(0.0, dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)));
-      gl_FragColor.rgb += vec3(0.0, 0.2, 0.5) * pow(rim, 3.0) * 0.25;
-      #include <dithering_fragment>
-      `
-    );
-  };
-  G.add(new THREE.Mesh(new THREE.SphereGeometry(1,64,64), oceanMat));
-
-  // Grid lines
-  const gm=new THREE.LineBasicMaterial({color:0x0a2040,transparent:true,opacity:.2});
-  for(let lat=-60;lat<=60;lat+=30){const p=[];for(let lng=-180;lng<=181;lng+=3)p.push(ll2v(lat,lng,1.001));G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),gm));}
-  for(let lng=-180;lng<=180;lng+=30){const p=[];for(let lat=-90;lat<=90;lat+=3)p.push(ll2v(lat,lng,1.001));G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),gm));}
-
-  // Country borders
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-    .then(r=>r.json()).then(world=>{
-      const{arcs,transform:{scale:[sx,sy],translate:[tx,ty]},objects}=world;
-      const dec=i=>{const raw=i<0?arcs[~i]:arcs[i];let x=0,y=0;const p=[];raw.forEach(([dx,dy])=>{x+=dx;y+=dy;p.push([x*sx+tx,y*sy+ty]);});return i<0?p.reverse():p;};
-      const add=arr=>{
-        const c=[];arr.forEach(i=>c.push(...dec(i)));if(c.length<2)return;
-        const v=[];c.forEach(([ln,la])=>{const p=ll2v(la,ln,1.003);v.push(p.x,p.y,p.z);});
-        const fc=ll2v(c[0][1],c[0][0],1.003);v.push(fc.x,fc.y,fc.z);
-        const g1=new THREE.BufferGeometry();g1.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
-        G.add(new THREE.Line(g1,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.85})));
-        const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.Float32BufferAttribute([...v],3));
-        G.add(new THREE.Line(g2,new THREE.LineBasicMaterial({color:0x0055dd,transparent:true,opacity:.35,blending:THREE.AdditiveBlending})));
-      };
-      objects.countries.geometries.forEach(({type,arcs:a})=>{
-        if(type==='Polygon')a.forEach(add);
-        else if(type==='MultiPolygon')a.forEach(p=>p.forEach(add));
-      });
-    }).catch(()=>{});
-
-  // Atmosphere — softer layers
-  [{r:1.18,c:0x001177,o:.04},{r:1.09,c:0x0033aa,o:.03},{r:1.03,c:0x0055cc,o:.015}].forEach(({r,c,o})=>
-    G.add(new THREE.Mesh(new THREE.SphereGeometry(r,64,64),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,side:THREE.BackSide,depthWrite:false}))));
-
-  // Extra outer rim glow (additive)
-  G.add(new THREE.Mesh(new THREE.SphereGeometry(1.22,64,64),new THREE.ShaderMaterial({
-    vertexShader:`varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader:`varying vec3 vN;void main(){float f=pow(max(0.,.68-dot(vN,vec3(0,0,1))),2.2);gl_FragColor=vec4(0.,.5,1.,f)*.5;}`,
-    side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
-  })));
-
-  // Stars
-  const stars=[];
-  [[2500,85,.12,.6],[1000,140,.07,.35],[400,55,.2,.85]].forEach(([n,r,sz,op])=>{
-    const v=[];for(let i=0;i<n;i++){const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);v.push(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
-    const s=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:sz,transparent:true,opacity:op}));
-    scene.add(s);stars.push(s);
-  });
-
-  // Hubs
-  const HUBS=[[40.71,-74.01],[51.51,-0.13],[35.68,139.69],[22.32,114.17],[1.35,103.82],[48.86,2.35],[52.52,13.40],[37.57,126.98],[25.20,55.27],[-23.55,-46.63],[19.08,72.88],[31.23,121.47],[43.65,-79.38],[-33.87,151.21],[55.76,37.62],[-1.29,36.82],[30.04,31.24],[6.52,3.38],[-34.60,-58.38],[60.17,24.94],[41.01,28.97],[37.98,23.72],[45.46,9.19],[40.42,-3.70],[53.34,-6.27],[59.91,10.75],[50.85,4.35],[47.37,8.54],[28.61,77.21],[35.01,135.77]];
-  // Glow texture for sprites
-  const dotCanvas = document.createElement('canvas');
-  dotCanvas.width = dotCanvas.height = 64;
-  const dc = dotCanvas.getContext('2d');
-  const grad = dc.createRadialGradient(32,32,0,32,32,32);
-  grad.addColorStop(0,  'rgba(255,255,255,1)');
-  grad.addColorStop(0.2,'rgba(0,200,255,0.9)');
-  grad.addColorStop(0.6,'rgba(0,100,255,0.4)');
-  grad.addColorStop(1,  'rgba(0,0,255,0)');
-  dc.fillStyle=grad; dc.fillRect(0,0,64,64);
-  const dotTex = new THREE.CanvasTexture(dotCanvas);
-
-  const nodes=HUBS.map(([lat,lng])=>{
-    const p=ll2v(lat,lng,1.013);
-    // Sprite dot — soft glow texture
-    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({
-      map:dotTex, color:0x00d4ff, transparent:true, opacity:0.85,
-      blending:THREE.AdditiveBlending, depthWrite:false
-    }));
-    sprite.position.copy(p); sprite.scale.set(.045,.045,.045); G.add(sprite);
-    // Thin ring
-    const r1=new THREE.Mesh(new THREE.RingGeometry(.010,.013,16),
-      new THREE.MeshBasicMaterial({color:0x00aaff,transparent:true,opacity:.5,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
-    r1.position.copy(p); r1.lookAt(0,0,0); G.add(r1);
-    // Ripple ring
-    const r2=new THREE.Mesh(new THREE.RingGeometry(.014,.019,16),
-      new THREE.MeshBasicMaterial({color:0x0066ff,transparent:true,opacity:.2,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
-    r2.position.copy(p); r2.lookAt(0,0,0); G.add(r2);
-    return{sprite,r1,r2,phase:Math.random()*Math.PI*2};
-  });
-
-  // Arc system
-  const ARC_COLORS=[0x00c8ff,0xff8c00,0x00e87a,0xff3d5a,0xc084fc,0xfbbf24,0x00ffdd,0xff5577,0x44ffaa];
-  const NC=120,TR=.28;
-  const arcs=[];let _arcT=0;
-
-  function mkArc(){
-    let i1=Math.floor(Math.random()*HUBS.length),i2;
-    do{i2=Math.floor(Math.random()*HUBS.length);}while(i2===i1);
-    const col=ARC_COLORS[Math.floor(Math.random()*ARC_COLORS.length)];
-    const s=ll2v(HUBS[i1][0],HUBS[i1][1]),e=ll2v(HUBS[i2][0],HUBS[i2][1]);
-    const dist=s.distanceTo(e);
-    const m=new THREE.Vector3().addVectors(s,e).multiplyScalar(.5);
-    m.normalize().multiplyScalar(1.2+dist*.32+Math.random()*.2);
-    const curve=new THREE.QuadraticBezierCurve3(s,m,e),pts=curve.getPoints(NC);
-    // Static dim path
-    const pg=new THREE.BufferGeometry().setFromPoints(pts);
-    const pm=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.09,depthWrite:false});
-    const path=new THREE.Line(pg,pm);G.add(path);
-    // Trail
-    const tg=new THREE.BufferGeometry().setFromPoints(pts.slice(0,2));
-    const tm=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});
-    const trail=new THREE.Line(tg,tm);G.add(trail);
-    // Head glow
-    const head=new THREE.Mesh(new THREE.SphereGeometry(.025,8,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));G.add(head);
-    // Head core
-    const core2=new THREE.Mesh(new THREE.SphereGeometry(.009,8,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));G.add(core2);
-    return{path,pm,trail,tm,head,core:core2,curve,pts,prog:0,spd:.003+Math.random()*.004};
-  }
-
-  // Seed
-  for(let i=0;i<8;i++){const a=mkArc();a.prog=i/8*.85;arcs.push(a);}
-
-  // Lights
-  scene.add(new THREE.AmbientLight(0x0a1a33,8));
-  const kl=new THREE.DirectionalLight(0x4488ff,1.2);kl.position.set(4,2,5);scene.add(kl);
-  const rl=new THREE.DirectionalLight(0x0033aa,.6);rl.position.set(0,0,-5);scene.add(rl);
-  const dl=new THREE.PointLight(0x0066ff,1.5,8);dl.position.set(2,1,3);scene.add(dl);
-
-  let gT=0;
-  function loop(){
-    requestAnimationFrame(loop);
-    const now=Date.now();
-    gT+=.016;
-    if(!ctrl.drag)ctrl.tx+=.00042;
-    ctrl.rx+=(ctrl.ty-ctrl.rx)*.07;ctrl.ry+=(ctrl.tx-ctrl.ry)*.07;
-    G.rotation.x=ctrl.rx;G.rotation.y=ctrl.ry;
-    dl.position.x=Math.cos(gT*.3)*3;dl.position.z=Math.sin(gT*.3)*3;
-    stars.forEach((s,i)=>{s.rotation.y=ctrl.ry*(.04+i*.02);s.rotation.x=ctrl.rx*(.02+i*.01);});
-    // Pulse nodes
-    nodes.forEach(n=>{
-      const p01=(Math.sin(gT*2+n.phase)+1)*.5;
-      // Sprite breathe
-      const ss=.038+p01*.012; n.sprite.scale.set(ss,ss,ss);
-      n.sprite.material.opacity=.65+p01*.25;
-      // Ring1
-      n.r1.material.opacity=.25+p01*.35;
-      // Ripple ring2 — expand outward
-      const rs=1+(((gT*1.2+n.phase)%1))*.85;
-      n.r2.scale.set(rs,rs,rs);
-      n.r2.material.opacity=(1-(rs-1)/.85)*.25;
-    });
-    // Arcs
-    if(now-_arcT>370&&arcs.filter(a=>a.prog<1).length<22){
-      arcs.push(mkArc());if(Math.random()<.35)arcs.push(mkArc());_arcT=now;
-    }
-    for(let i=arcs.length-1;i>=0;i--){
-      const a=arcs[i];a.prog+=a.spd;
-      if(a.prog>=1.5){
-        G.remove(a.path,a.trail,a.head,a.core);
-        [a.path,a.trail,a.head,a.core].forEach(o=>{o.geometry.dispose();o.material.dispose();});
-        arcs.splice(i,1);continue;
-      }
-      const t=Math.min(a.prog,1);
-      const fade=t<.06?t/.06:t>.86?(1-t)/.14:1;
-      const ts=Math.max(0,Math.floor((t-TR)*NC));
-      const te=Math.min(NC+1,Math.floor(t*NC)+1);
-      const tp=a.pts.slice(ts,te);
-      if(tp.length>1){a.trail.geometry.setFromPoints(tp);a.tm.opacity=fade*.95;}
-      a.pm.opacity=Math.min(.12,fade*.14);
-      if(t<1){const hp=a.curve.getPoint(t);a.head.position.copy(hp);a.core.position.copy(hp);a.head.material.opacity=fade*.8;a.core.material.opacity=fade;}
-    }
-    renderer.render(scene,camera);
-  }
-  loop();
-
-  window.addEventListener('resize',()=>{
-    camera.aspect=W()/H2();camera.updateProjectionMatrix();renderer.setSize(W(),H2());
-  });
-})();
-</script>
-
 <script>
 const H='https://horizon.stellar.org';
-let XLM=0.174, feedItems=[], biggest=0, usdcVol=0, alertCount=0;
+const API='https://api.stellarmonitor.xyz';
+let XLM=0.174;
+let allFeed=[];    // все транзакции за 24ч
+let liveFeed=[];   // последние с Horizon (реалтайм)
+let currentPage=0;
+const PAGE_SIZE=50;
+let ic={1:0,2:0,3:0,4:0};
+
 const $=id=>document.getElementById(id);
 const fU=n=>{if(!n||n<=0)return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toFixed(0)};
 const fN=n=>{if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toFixed(2)};
-const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';return Math.floor(s/3600)+'h';};
+const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'};
+const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
+
 function animNum(el,val,fmt){
   if(!el)return;
   el.style.transition='transform .12s ease,opacity .12s ease';
@@ -372,112 +157,224 @@ function animNum(el,val,fmt){
     requestAnimationFrame(()=>{el.style.transition='transform .12s ease,opacity .12s ease';el.style.transform='translateY(0)';el.style.opacity='1';});
   },120);
 }
-function renderTxFeed(){
-  const feed=document.getElementById('tx-feed');if(!feed)return;
-  feed.innerHTML=feedItems.slice(0,6).map((it,i)=>{
-    const ac=it.usd>=10e6?'huge':it.usd>=1e6?'big':'';
-    const disp=it.amt>=1000?fN(it.amt)+' '+it.code:it.amt.toFixed(2)+' '+it.code;
-    return`<div class="tx-item" style="animation-delay:${i*60}ms" onclick="window.open('https://stellar.expert/explorer/public/tx/${it.hash}','_blank')">
-      <div class="tx-type">Transfer · ${it.code}</div>
-      <div class="tx-amount ${ac}">${disp}</div>
-      <div class="tx-sub">${it.from?.slice(0,6)}...→${it.to?.slice(0,6)}...</div>
-      <div class="tx-time">${ago(it.ts)} ago</div>
-    </div>`;
-  }).join('');
-}
-</script>
 
-// ── DATA ───────────────────────────────────────────────────────────────────
-</script>
-<script>
+// ── Fetch от API (история за 24ч) ──────────────────────────────────────────
+async function fetchFromAPI(){
+  try{
+    const r=await fetch(`${API}/api/alerts?limit=1000`);
+    if(!r.ok) return;
+    const d=await r.json();
+    const alerts=d.alerts||[];
+    if(!alerts.length) return;
+
+    // Фильтруем за последние 24 часа
+    const cutoff=Date.now()-86400000;
+    const today=alerts.filter(a=>new Date(a.created_at).getTime()>cutoff);
+
+    const items=today.map(a=>{
+      const code=a.asset||a.selling||'XLM';
+      const usd=a.usd_value||0;
+      const amt=a.amount||0;
+      const disp=amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
+      const from=a.from_full||a.sender||'';
+      const to=a.to_full||'';
+      const sub=from?`${from.slice(0,6)}...${from.slice(-4)} → ${to?(to.slice(0,6)+'...'+to.slice(-4)):'?'}`:(a.pair||'');
+      const tp=a.type==='SDEX'?'SDEX':a.type?.includes('AIRDROP')?'AIRDROP':'WHALE';
+      const tc=tp==='WHALE'?'pw':tp==='SDEX'?'ps':'pm';
+      return{tp,tc,desc:disp,sub,usd,ts:a.created_at,hash:a.tx_hash||'',link:a.link||''};
+    });
+
+    items.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+
+    // Считаем статистику за 24ч
+    let usdc24=0,big24=0;
+    ic={1:0,2:0,3:0,4:0};
+    let wUsdc=0,wXlm=0,sdex=0,airdrop=0;
+
+    today.forEach(a=>{
+      const usd=a.usd_value||0;
+      if((a.asset==='USDC'||a.selling==='USDC')&&a.amount) usdc24+=a.amount;
+      if(usd>big24) big24=usd;
+      if(usd>=10e6)ic[4]++;else if(usd>=1e6)ic[3]++;else if(usd>=250000)ic[2]++;else ic[1]++;
+      if(a.type==='WHALE_USDC') wUsdc++;
+      else if(a.type==='WHALE_XLM') wXlm++;
+      else if(a.type==='SDEX') sdex++;
+      else if(a.type?.includes('AIRDROP')) airdrop++;
+    });
+
+    // Обновляем allFeed — мёрж с live
+    const seen=new Set(items.map(i=>i.hash).filter(Boolean));
+    const liveOnly=liveFeed.filter(l=>l.hash&&!seen.has(l.hash));
+    allFeed=[...liveOnly,...items];
+
+    // Stats
+    animNum($('m-alerts'), allFeed.length, v=>v);
+    animNum($('m-usdc'), usdc24, fN);
+    animNum($('m-biggest'), big24, fU);
+
+    // Alert types
+    $('t-whale-usdc').textContent=wUsdc;
+    $('t-whale-xlm').textContent=wXlm;
+    $('t-sdex').textContent=sdex;
+    $('t-airdrop').textContent=airdrop;
+
+    // Last alert
+    if(items.length) $('last-alert').textContent=ago(items[0].ts);
+
+    renderBars();
+    if(currentPage===0) renderPage(0);
+
+  }catch(e){console.warn('API:',e);}
+}
+
+// ── Fetch новых с Horizon (реалтайм каждую секунду) ────────────────────────
+let _lastHorizonHash='';
+async function fetchLive(){
+  try{
+    const r=await fetch(`${H}/payments?limit=20&order=desc&include_failed=false`);
+    if(!r.ok)return;
+    const d=await r.json();
+    const ops=d?._embedded?.records||[];
+    if(!ops.length)return;
+
+    // Проверяем есть ли новые
+    if(ops[0].transaction_hash===_lastHorizonHash)return;
+    _lastHorizonHash=ops[0].transaction_hash;
+
+    const newItems=[];
+    ops.forEach(op=>{
+      if(op.type!=='payment')return;
+      const hash=op.transaction_hash;
+      // Не дублируем то что уже есть
+      if(allFeed.find(f=>f.hash===hash))return;
+      if(liveFeed.find(f=>f.hash===hash))return;
+      const amt=parseFloat(op.amount||0);
+      const code=op.asset_type==='native'?'XLM':(op.asset_code||'?');
+      const usd=code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
+      const disp=amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
+      if(code==='USDC'||code==='USDT'){ /* count */ }
+      if(usd>=10e6)ic[4]++;else if(usd>=1e6)ic[3]++;else if(usd>=250000)ic[2]++;else ic[1]++;
+      newItems.push({tp:'LIVE',tc:'ps',desc:disp,
+        sub:`${op.from?.slice(0,6)}...${op.from?.slice(-4)} → ${op.to?.slice(0,6)}...${op.to?.slice(-4)}`,
+        usd,ts:op.created_at,hash});
+    });
+
+    if(!newItems.length)return;
+
+    // Добавляем в начало
+    liveFeed=[...newItems,...liveFeed].slice(0,200);
+    allFeed=[...newItems,...allFeed];
+
+    // Обновляем счётчик
+    $('m-alerts').textContent=allFeed.length;
+    $('upd-label').textContent='Live · '+new Date().toLocaleTimeString('en',{hour12:false});
+    renderBars();
+
+    // Если на первой странице — обновляем её
+    if(currentPage===0) renderPage(0);
+
+  }catch(e){}
+}
+
+// ── Рендер страницы ────────────────────────────────────────────────────────
+function renderPage(page){
+  currentPage=page;
+  const total=allFeed.length;
+  const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  const start=page*PAGE_SIZE;
+  const end=Math.min(start+PAGE_SIZE,total);
+  const slice=allFeed.slice(start,end);
+
+  const b=$('fbody');
+  if(!slice.length){
+    b.innerHTML='<div style="padding:32px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)">No transactions yet</div>';
+  } else {
+    b.innerHTML=slice.map((it,i)=>{
+      const ac=it.usd>=10e6?'huge':it.usd>=1e6?'big':'';
+      const link=it.link||`https://stellar.expert/explorer/public/tx/${it.hash}`;
+      return`<div class="feed-row" style="animation-delay:${Math.min(i,10)*20}ms" onclick="window.open('${link}','_blank')">
+        <div>${pill(it.tp,it.tc)}</div>
+        <div><div class="fdesc">${it.desc}</div><div class="fsub">${it.sub}</div></div>
+        <div class="famt ${ac}">${fU(it.usd)}</div>
+        <div class="ftime" data-ts="${it.ts}">${ago(it.ts)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Pagination
+  const pg=$('pagination');
+  const pgInfo=$('pg-info');
+  const pgBtns=$('pg-btns');
+
+  if(total<=PAGE_SIZE){
+    pg.style.display='none';
+    return;
+  }
+
+  pg.style.display='flex';
+  pgInfo.textContent=`${start+1}–${end} of ${total}`;
+
+  // Build page buttons
+  let btns='';
+  btns+=`<button class="pg-btn" onclick="renderPage(${page-1})" ${page===0?'disabled':''}>← Prev</button>`;
+
+  // Show page numbers
+  const maxBtns=7;
+  let startP=Math.max(0,page-Math.floor(maxBtns/2));
+  let endP=Math.min(totalPages,startP+maxBtns);
+  startP=Math.max(0,endP-maxBtns);
+
+  if(startP>0) btns+=`<button class="pg-btn" onclick="renderPage(0)">1</button><span style="color:var(--gray2);padding:0 4px;font-family:var(--mono);font-size:10px">...</span>`;
+  for(let p=startP;p<endP;p++){
+    btns+=`<button class="pg-btn${p===page?' active':''}" onclick="renderPage(${p})">${p+1}</button>`;
+  }
+  if(endP<totalPages) btns+=`<span style="color:var(--gray2);padding:0 4px;font-family:var(--mono);font-size:10px">...</span><button class="pg-btn" onclick="renderPage(${totalPages-1})">${totalPages}</button>`;
+
+  btns+=`<button class="pg-btn" onclick="renderPage(${page+1})" ${page>=totalPages-1?'disabled':''}>Next →</button>`;
+  pgBtns.innerHTML=btns;
+}
+
+function renderBars(){
+  const tot=ic[1]+ic[2]+ic[3]+ic[4]||1;
+  [1,2,3,4].forEach(k=>{$('ib'+k).style.width=(ic[k]/tot*100)+'%';$('ic'+k).textContent=ic[k];});
+}
+
 async function fetchPrice(){
   try{
     const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');
     const d=await r.json();
     XLM=parseFloat(d?.stellar?.usd)||XLM;
-    animNum($('s-price'),XLM,v=>'$'+v.toFixed(4));
+    animNum($('m-price'),XLM,v=>'$'+v.toFixed(4));
   }catch(e){}
 }
 
-async function fetchFromAPI(){
-  try{
-    const r=await fetch('https://api.stellarmonitor.xyz/api/alerts?limit=500');
-    if(!r.ok) return;
-    const d=await r.json();
-    const alerts=d.alerts||[];
-    if(!alerts.length) return;
-    let cnt=alerts.length, usdc=0, big=0;
-    alerts.forEach(a=>{
-      if((a.asset==='USDC'||a.selling==='USDC')&&a.amount) usdc+=a.amount;
-      if((a.usd_value||0)>big) big=a.usd_value||0;
-    });
-    animNum($('s-alerts'),cnt,v=>v);
-    animNum($('s-usdc'),usdc,fN);
-    animNum($('s-biggest'),big,fU);
-    $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
-    feedItems=alerts.slice(0,8).map(a=>{
-      const code=a.asset||a.selling||'XLM';
-      const amt=a.amount||0;
-      return{code,amt,usd:a.usd_value||0,from:a.from_full||a.sender||'',to:a.to_full||'',ts:a.created_at,hash:a.tx_hash||''};
-    });
-    renderTxFeed();
-  }catch(e){}
-}
-
-async function fetchOps(){
-  try{
-    const r=await fetch(`${H}/payments?limit=200&order=desc&include_failed=false`);
-    if(!r.ok)return;
-    const d=await r.json();
-    const ops=d?._embedded?.records||[];
-    let cnt=0,usdc=0,big=0;
-    const items=[],seen=new Set();
-    ops.forEach(op=>{
-      if(op.type!=='payment')return;
-      const hash=op.transaction_hash;
-      if(seen.has(hash))return; seen.add(hash);
-      const amt=parseFloat(op.amount||0);
-      const code=op.asset_type==='native'?'XLM':(op.asset_code||'?');
-      const usd=code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
-      if(code==='USDC'||code==='USDT')usdc+=amt;
-      cnt++;if(usd>big)big=usd;
-      if(amt>0.01)items.push({code,amt,usd,from:op.from,to:op.to,ts:op.created_at,hash});
-    });
-    items.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-    feedItems=[...items.slice(0,8),...feedItems].slice(0,12);
-    alertCount=cnt;usdcVol=usdc;biggest=big;
-    animNum($('s-alerts'),cnt,v=>v);
-    animNum($('s-usdc'),usdc,fN);
-    animNum($('s-biggest'),big,fU);
-    $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
-    renderTxFeed();
-  }catch(e){}
-}
-
-function buildTicker(){
-  const items=[['XLM','Stellar'],['USDC/AQUA','SDEX'],['Soroban','Active'],['Whale Alerts','24/7'],['Fee','0.00001 XLM'],['TVL','$211M+'],['Accounts','10M+']];
-  const h=items.map(([l,v])=>`<div class="ti"><span>${l}</span><b>${v}</b><span class="u">▲</span></div>`).join('');
-  document.getElementById('tkr').innerHTML=h+h;
-}
-
+// ── Таймеры ────────────────────────────────────────────────────────────────
 let _lastXLM=0;
 setInterval(()=>{
-  const fresh='$'+XLM.toFixed(4);
-  const el=document.getElementById('s-price');
-  if(el&&el.textContent!==fresh&&Math.abs(XLM-_lastXLM)>0.00005){
-    animNum(el,XLM,v=>'$'+v.toFixed(4));
+  // Обновляем время в ленте каждую секунду
+  document.querySelectorAll('.ftime[data-ts]').forEach(el=>{
+    el.textContent=ago(el.dataset.ts);
+  });
+  // XLM цена только если изменилась
+  if(Math.abs(XLM-_lastXLM)>0.00005){
+    animNum($('m-price'),XLM,v=>'$'+v.toFixed(4));
     _lastXLM=XLM;
   }
-},2000);
+},1000);
 
-buildTicker();fetchPrice();
-fetchFromAPI();
-fetchOps();
-setInterval(fetchFromAPI,60000);
-setInterval(fetchOps,15000);
-setInterval(fetchPrice,60000);
+// Новые транзакции с Horizon каждую секунду
+setInterval(fetchLive, 1000);
+
+// Обновляем историю с API каждые 30 секунд
+setInterval(fetchFromAPI, 30000);
+
+// Цена раз в минуту
+setInterval(fetchPrice, 60000);
+
+// ── Старт ─────────────────────────────────────────────────────────────────
+fetchPrice();
+fetchFromAPI(); // сначала история за 24ч
+setTimeout(fetchLive, 1000); // потом реалтайм
 </script>
-
-
 </body>
 </html>
