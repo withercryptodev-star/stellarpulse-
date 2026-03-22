@@ -519,6 +519,9 @@ function tickForce() {
   const nm    = graph.nodeMap || {};
   const cx    = canvas.width/2;
   const cy    = canvas.height/2;
+  const W     = canvas.width;
+  const H2    = canvas.height;
+  const margin = 80;
 
   // Repulsion between all nodes
   for(let i=0;i<nodes.length;i++){
@@ -526,9 +529,9 @@ function tickForce() {
       const a=nodes[i], b=nodes[j];
       const dx=b.x-a.x, dy=b.y-a.y;
       const dist=Math.sqrt(dx*dx+dy*dy)||1;
-      const minDist=(a.r+b.r)*2.5+30;
+      const minDist=(a.r+b.r)*2.2+40;
       if(dist<minDist){
-        const force=(minDist-dist)/dist*0.45;
+        const force=(minDist-dist)/dist*0.3;
         const fx=dx*force, fy=dy*force;
         if(!a.pinned){a.vx-=fx;a.vy-=fy;}
         if(!b.pinned){b.vx+=fx;b.vy+=fy;}
@@ -536,36 +539,45 @@ function tickForce() {
     }
   }
 
-  // Attraction along edges
+  // Attraction along edges — only pull if too far
   edges.forEach(e=>{
     const a=nm[e.from], b=nm[e.to];
     if(!a||!b) return;
     const dx=b.x-a.x, dy=b.y-a.y;
     const dist=Math.sqrt(dx*dx+dy*dy)||1;
-    const idealDist = 120 + (a.r+b.r);
-    const force=(dist-idealDist)/dist*0.06;
-    const fx=dx*force, fy=dy*force;
-    if(!a.pinned){a.vx+=fx;a.vy+=fy;}
-    if(!b.pinned){b.vx-=fx;b.vy-=fy;}
-  });
-
-  // Center gravity for root
-  nodes.forEach(n=>{
-    if(n.isRoot){
-      n.vx+=(cx-n.x)*0.05;
-      n.vy+=(cy-n.y)*0.05;
-    } else {
-      // Gentle center pull
-      n.vx+=(cx-n.x)*0.002;
-      n.vy+=(cy-n.y)*0.002;
+    const idealDist = 100 + (a.r+b.r);
+    if(dist > idealDist){
+      const force=(dist-idealDist)/dist*0.035;
+      const fx=dx*force, fy=dy*force;
+      if(!a.pinned){a.vx+=fx;a.vy+=fy;}
+      if(!b.pinned){b.vx-=fx;b.vy-=fy;}
     }
   });
 
-  // Integrate + dampen
+  // Strong center gravity
+  nodes.forEach(n=>{
+    if(n.isRoot){
+      n.vx+=(cx-n.x)*0.08;
+      n.vy+=(cy-n.y)*0.08;
+    } else {
+      n.vx+=(cx-n.x)*0.006;
+      n.vy+=(cy-n.y)*0.006;
+    }
+  });
+
+  // Integrate + dampen + velocity cap + hard boundary
   nodes.forEach(n=>{
     if(n.pinned || drag.node===n) return;
-    n.vx*=0.82; n.vy*=0.82;
+    // Cap velocity to prevent explosion
+    const speed=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
+    if(speed>8){n.vx=n.vx/speed*8;n.vy=n.vy/speed*8;}
+    n.vx*=0.78; n.vy*=0.78;
     n.x+=n.vx; n.y+=n.vy;
+    // Bounce back if outside screen
+    if(n.x<margin)   {n.x=margin;   n.vx=Math.abs(n.vx)*0.3;}
+    if(n.x>W-margin) {n.x=W-margin; n.vx=-Math.abs(n.vx)*0.3;}
+    if(n.y<margin)   {n.y=margin;   n.vy=Math.abs(n.vy)*0.3;}
+    if(n.y>H2-margin){n.y=H2-margin;n.vy=-Math.abs(n.vy)*0.3;}
   });
 }
 
