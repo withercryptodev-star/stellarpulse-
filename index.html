@@ -79,16 +79,17 @@ h1 .hi{color:var(--cyan)}
 @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:768px){.hero{padding:0 20px}.nav-center{display:none}.tx-feed{display:none}.stats-bar{padding:0 16px}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="logo"><div class="logo-pulse"></div>StellarMonitor</a>
+  <a href="/" class="logo"><div class="logo-pulse"></div>StellarMonitor</a>
   <div class="nav-center">
-    <a href="feed.html"    class="nav-link">Live Feed</a>
-    <a href="scanner.html" class="nav-link">Scanner</a>
-    <a href="graph.html"   class="nav-link">Graph</a>
-    <a href="docs.html"    class="nav-link">Docs</a>
+    <a href="/feed"    class="nav-link">Live Feed</a>
+    <a href="/scanner" class="nav-link">Scanner</a>
+    <a href="/graph"   class="nav-link">Graph</a>
+    <a href="/docs"    class="nav-link">Docs</a>
   </div>
   <a href="https://x.com/StellarMonitor" class="nav-cta" target="_blank">Follow ↗</a>
 </nav>
@@ -101,10 +102,10 @@ h1 .hi{color:var(--cyan)}
   <h1>On-chain<br><span class="dim">intelligence</span><br>for <span class="hi">Stellar</span></h1>
   <p class="hero-sub">Real-time monitoring of whale transfers,<br>SDEX trades and Soroban events.</p>
   <div class="tool-cards">
-    <a href="feed.html"    class="tool-card"><div class="tc-icon">📡</div><div class="tc-title">Live Feed</div><div class="tc-sub">Real-time alerts</div></a>
-    <a href="scanner.html" class="tool-card"><div class="tc-icon">🔍</div><div class="tc-title">Scanner</div><div class="tc-sub">Analyze wallet</div></a>
-    <a href="graph.html"   class="tool-card"><div class="tc-icon">🕸</div><div class="tc-title">Graph</div><div class="tc-sub">Connection map</div></a>
-    <a href="docs.html"    class="tool-card"><div class="tc-icon">📄</div><div class="tc-title">Docs</div><div class="tc-sub">API reference</div></a>
+    <a href="/feed"    class="tool-card"><div class="tc-icon">📡</div><div class="tc-title">Live Feed</div><div class="tc-sub">Real-time alerts</div></a>
+    <a href="/scanner" class="tool-card"><div class="tc-icon">🔍</div><div class="tc-title">Scanner</div><div class="tc-sub">Analyze wallet</div></a>
+    <a href="/graph"   class="tool-card"><div class="tc-icon">🕸</div><div class="tc-title">Graph</div><div class="tc-sub">Connection map</div></a>
+    <a href="/docs"    class="tool-card"><div class="tc-icon">📄</div><div class="tc-title">Docs</div><div class="tc-sub">API reference</div></a>
   </div>
 </div>
 
@@ -118,7 +119,242 @@ h1 .hi{color:var(--cyan)}
   <div class="stat-item"><div class="s-label">Updated</div><div class="s-val" id="s-upd" style="font-size:11px;color:var(--gray1);min-width:70px">—</div></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// GLOBE — Three.js r128, no ESM needed
+// ═══════════════════════════════════════════════════════════════════════════
+(function initGlobe(){
+  const container = document.getElementById('globe-container');
+  if(!container) return;
+
+  const W = ()=>container.clientWidth, H2 = ()=>container.clientHeight;
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%';
+  container.appendChild(canvas);
+
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(W(),H2());
+  renderer.setClearColor(0x000008,1);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.5;
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, W()/H2(), 0.1, 1000);
+  camera.position.z = 2.65;
+
+  // Controls
+  const ctrl={drag:false,lx:0,ly:0,rx:0,ry:0,tx:0,ty:0};
+  canvas.addEventListener('mousedown',e=>{ctrl.drag=true;ctrl.lx=e.clientX;ctrl.ly=e.clientY;});
+  window.addEventListener('mousemove',e=>{
+    if(!ctrl.drag)return;
+    ctrl.tx+=(e.clientX-ctrl.lx)*.005; ctrl.ty+=(e.clientY-ctrl.ly)*.003;
+    ctrl.ty=Math.max(-1.1,Math.min(1.1,ctrl.ty));
+    ctrl.lx=e.clientX; ctrl.ly=e.clientY;
+  });
+  window.addEventListener('mouseup',()=>{ctrl.drag=false;});
+
+  const ll2v=(lat,lng,r=1)=>{
+    const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;
+    return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
+  };
+
+  // ── Globe group ────────────────────────────────────────────────────────────
+  const G = new THREE.Group(); scene.add(G);
+
+  // Ocean sphere — MeshPhongMaterial with custom gradient shader
+  const oceanMat = new THREE.MeshPhongMaterial({
+    color:            0x081830,
+    emissive:         new THREE.Color(0x0a3cff),
+    emissiveIntensity:0.15,
+    specular:         0x0a1e3d,
+    shininess:        20,
+  });
+  // Gradient: front lighter, back darker + subtle rim
+  oceanMat.onBeforeCompile = shader => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      `
+      float intensity = dot(normalize(vNormal), vec3(0.0, 0.0, 1.0));
+      gl_FragColor.rgb *= 0.5 + intensity * 0.7;
+      float rim = 1.0 - max(0.0, dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)));
+      gl_FragColor.rgb += vec3(0.0, 0.2, 0.5) * pow(rim, 3.0) * 0.25;
+      #include <dithering_fragment>
+      `
+    );
+  };
+  G.add(new THREE.Mesh(new THREE.SphereGeometry(1,64,64), oceanMat));
+
+  // Grid lines
+  const gm=new THREE.LineBasicMaterial({color:0x0a2040,transparent:true,opacity:.2});
+  for(let lat=-60;lat<=60;lat+=30){const p=[];for(let lng=-180;lng<=181;lng+=3)p.push(ll2v(lat,lng,1.001));G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),gm));}
+  for(let lng=-180;lng<=180;lng+=30){const p=[];for(let lat=-90;lat<=90;lat+=3)p.push(ll2v(lat,lng,1.001));G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),gm));}
+
+  // Country borders
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r=>r.json()).then(world=>{
+      const{arcs,transform:{scale:[sx,sy],translate:[tx,ty]},objects}=world;
+      const dec=i=>{const raw=i<0?arcs[~i]:arcs[i];let x=0,y=0;const p=[];raw.forEach(([dx,dy])=>{x+=dx;y+=dy;p.push([x*sx+tx,y*sy+ty]);});return i<0?p.reverse():p;};
+      const add=arr=>{
+        const c=[];arr.forEach(i=>c.push(...dec(i)));if(c.length<2)return;
+        const v=[];c.forEach(([ln,la])=>{const p=ll2v(la,ln,1.003);v.push(p.x,p.y,p.z);});
+        const fc=ll2v(c[0][1],c[0][0],1.003);v.push(fc.x,fc.y,fc.z);
+        const g1=new THREE.BufferGeometry();g1.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+        G.add(new THREE.Line(g1,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.85})));
+        const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.Float32BufferAttribute([...v],3));
+        G.add(new THREE.Line(g2,new THREE.LineBasicMaterial({color:0x0055dd,transparent:true,opacity:.35,blending:THREE.AdditiveBlending})));
+      };
+      objects.countries.geometries.forEach(({type,arcs:a})=>{
+        if(type==='Polygon')a.forEach(add);
+        else if(type==='MultiPolygon')a.forEach(p=>p.forEach(add));
+      });
+    }).catch(()=>{});
+
+  // Atmosphere — softer layers
+  [{r:1.18,c:0x001177,o:.04},{r:1.09,c:0x0033aa,o:.03},{r:1.03,c:0x0055cc,o:.015}].forEach(({r,c,o})=>
+    G.add(new THREE.Mesh(new THREE.SphereGeometry(r,64,64),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,side:THREE.BackSide,depthWrite:false}))));
+
+  // Extra outer rim glow (additive)
+  G.add(new THREE.Mesh(new THREE.SphereGeometry(1.22,64,64),new THREE.ShaderMaterial({
+    vertexShader:`varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader:`varying vec3 vN;void main(){float f=pow(max(0.,.68-dot(vN,vec3(0,0,1))),2.2);gl_FragColor=vec4(0.,.5,1.,f)*.5;}`,
+    side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
+  })));
+
+  // Stars
+  const stars=[];
+  [[2500,85,.12,.6],[1000,140,.07,.35],[400,55,.2,.85]].forEach(([n,r,sz,op])=>{
+    const v=[];for(let i=0;i<n;i++){const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);v.push(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+    const s=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:sz,transparent:true,opacity:op}));
+    scene.add(s);stars.push(s);
+  });
+
+  // Hubs
+  const HUBS=[[40.71,-74.01],[51.51,-0.13],[35.68,139.69],[22.32,114.17],[1.35,103.82],[48.86,2.35],[52.52,13.40],[37.57,126.98],[25.20,55.27],[-23.55,-46.63],[19.08,72.88],[31.23,121.47],[43.65,-79.38],[-33.87,151.21],[55.76,37.62],[-1.29,36.82],[30.04,31.24],[6.52,3.38],[-34.60,-58.38],[60.17,24.94],[41.01,28.97],[37.98,23.72],[45.46,9.19],[40.42,-3.70],[53.34,-6.27],[59.91,10.75],[50.85,4.35],[47.37,8.54],[28.61,77.21],[35.01,135.77]];
+  // Glow texture for sprites
+  const dotCanvas = document.createElement('canvas');
+  dotCanvas.width = dotCanvas.height = 64;
+  const dc = dotCanvas.getContext('2d');
+  const grad = dc.createRadialGradient(32,32,0,32,32,32);
+  grad.addColorStop(0,  'rgba(255,255,255,1)');
+  grad.addColorStop(0.2,'rgba(0,200,255,0.9)');
+  grad.addColorStop(0.6,'rgba(0,100,255,0.4)');
+  grad.addColorStop(1,  'rgba(0,0,255,0)');
+  dc.fillStyle=grad; dc.fillRect(0,0,64,64);
+  const dotTex = new THREE.CanvasTexture(dotCanvas);
+
+  const nodes=HUBS.map(([lat,lng])=>{
+    const p=ll2v(lat,lng,1.013);
+    // Sprite dot — soft glow texture
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({
+      map:dotTex, color:0x00d4ff, transparent:true, opacity:0.85,
+      blending:THREE.AdditiveBlending, depthWrite:false
+    }));
+    sprite.position.copy(p); sprite.scale.set(.045,.045,.045); G.add(sprite);
+    // Thin ring
+    const r1=new THREE.Mesh(new THREE.RingGeometry(.010,.013,16),
+      new THREE.MeshBasicMaterial({color:0x00aaff,transparent:true,opacity:.5,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
+    r1.position.copy(p); r1.lookAt(0,0,0); G.add(r1);
+    // Ripple ring
+    const r2=new THREE.Mesh(new THREE.RingGeometry(.014,.019,16),
+      new THREE.MeshBasicMaterial({color:0x0066ff,transparent:true,opacity:.2,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
+    r2.position.copy(p); r2.lookAt(0,0,0); G.add(r2);
+    return{sprite,r1,r2,phase:Math.random()*Math.PI*2};
+  });
+
+  // Arc system
+  const ARC_COLORS=[0x00c8ff,0xff8c00,0x00e87a,0xff3d5a,0xc084fc,0xfbbf24,0x00ffdd,0xff5577,0x44ffaa];
+  const NC=120,TR=.28;
+  const arcs=[];let _arcT=0;
+
+  function mkArc(){
+    let i1=Math.floor(Math.random()*HUBS.length),i2;
+    do{i2=Math.floor(Math.random()*HUBS.length);}while(i2===i1);
+    const col=ARC_COLORS[Math.floor(Math.random()*ARC_COLORS.length)];
+    const s=ll2v(HUBS[i1][0],HUBS[i1][1]),e=ll2v(HUBS[i2][0],HUBS[i2][1]);
+    const dist=s.distanceTo(e);
+    const m=new THREE.Vector3().addVectors(s,e).multiplyScalar(.5);
+    m.normalize().multiplyScalar(1.2+dist*.32+Math.random()*.2);
+    const curve=new THREE.QuadraticBezierCurve3(s,m,e),pts=curve.getPoints(NC);
+    // Static dim path
+    const pg=new THREE.BufferGeometry().setFromPoints(pts);
+    const pm=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.09,depthWrite:false});
+    const path=new THREE.Line(pg,pm);G.add(path);
+    // Trail
+    const tg=new THREE.BufferGeometry().setFromPoints(pts.slice(0,2));
+    const tm=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});
+    const trail=new THREE.Line(tg,tm);G.add(trail);
+    // Head glow
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.025,8,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));G.add(head);
+    // Head core
+    const core2=new THREE.Mesh(new THREE.SphereGeometry(.009,8,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));G.add(core2);
+    return{path,pm,trail,tm,head,core:core2,curve,pts,prog:0,spd:.003+Math.random()*.004};
+  }
+
+  // Seed
+  for(let i=0;i<8;i++){const a=mkArc();a.prog=i/8*.85;arcs.push(a);}
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x0a1a33,8));
+  const kl=new THREE.DirectionalLight(0x4488ff,1.2);kl.position.set(4,2,5);scene.add(kl);
+  const rl=new THREE.DirectionalLight(0x0033aa,.6);rl.position.set(0,0,-5);scene.add(rl);
+  const dl=new THREE.PointLight(0x0066ff,1.5,8);dl.position.set(2,1,3);scene.add(dl);
+
+  let gT=0;
+  function loop(){
+    requestAnimationFrame(loop);
+    const now=Date.now();
+    gT+=.016;
+    if(!ctrl.drag)ctrl.tx+=.00042;
+    ctrl.rx+=(ctrl.ty-ctrl.rx)*.07;ctrl.ry+=(ctrl.tx-ctrl.ry)*.07;
+    G.rotation.x=ctrl.rx;G.rotation.y=ctrl.ry;
+    dl.position.x=Math.cos(gT*.3)*3;dl.position.z=Math.sin(gT*.3)*3;
+    stars.forEach((s,i)=>{s.rotation.y=ctrl.ry*(.04+i*.02);s.rotation.x=ctrl.rx*(.02+i*.01);});
+    // Pulse nodes
+    nodes.forEach(n=>{
+      const p01=(Math.sin(gT*2+n.phase)+1)*.5;
+      // Sprite breathe
+      const ss=.038+p01*.012; n.sprite.scale.set(ss,ss,ss);
+      n.sprite.material.opacity=.65+p01*.25;
+      // Ring1
+      n.r1.material.opacity=.25+p01*.35;
+      // Ripple ring2 — expand outward
+      const rs=1+(((gT*1.2+n.phase)%1))*.85;
+      n.r2.scale.set(rs,rs,rs);
+      n.r2.material.opacity=(1-(rs-1)/.85)*.25;
+    });
+    // Arcs
+    if(now-_arcT>370&&arcs.filter(a=>a.prog<1).length<22){
+      arcs.push(mkArc());if(Math.random()<.35)arcs.push(mkArc());_arcT=now;
+    }
+    for(let i=arcs.length-1;i>=0;i--){
+      const a=arcs[i];a.prog+=a.spd;
+      if(a.prog>=1.5){
+        G.remove(a.path,a.trail,a.head,a.core);
+        [a.path,a.trail,a.head,a.core].forEach(o=>{o.geometry.dispose();o.material.dispose();});
+        arcs.splice(i,1);continue;
+      }
+      const t=Math.min(a.prog,1);
+      const fade=t<.06?t/.06:t>.86?(1-t)/.14:1;
+      const ts=Math.max(0,Math.floor((t-TR)*NC));
+      const te=Math.min(NC+1,Math.floor(t*NC)+1);
+      const tp=a.pts.slice(ts,te);
+      if(tp.length>1){a.trail.geometry.setFromPoints(tp);a.tm.opacity=fade*.95;}
+      a.pm.opacity=Math.min(.12,fade*.14);
+      if(t<1){const hp=a.curve.getPoint(t);a.head.position.copy(hp);a.core.position.copy(hp);a.head.material.opacity=fade*.8;a.core.material.opacity=fade;}
+    }
+    renderer.render(scene,camera);
+  }
+  loop();
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=W()/H2();camera.updateProjectionMatrix();renderer.setSize(W(),H2());
+  });
+})();
+</script>
+
 <script>
 const H='https://horizon.stellar.org';
 let XLM=0.174, feedItems=[], biggest=0, usdcVol=0, alertCount=0;
@@ -126,7 +362,6 @@ const $=id=>document.getElementById(id);
 const fU=n=>{if(!n||n<=0)return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toFixed(0)};
 const fN=n=>{if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toFixed(2)};
 const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';return Math.floor(s/3600)+'h';};
-
 function animNum(el,val,fmt){
   if(!el)return;
   el.style.transition='transform .12s ease,opacity .12s ease';
@@ -137,332 +372,55 @@ function animNum(el,val,fmt){
     requestAnimationFrame(()=>{el.style.transition='transform .12s ease,opacity .12s ease';el.style.transform='translateY(0)';el.style.opacity='1';});
   },120);
 }
-
-// ── THREE.JS GLOBE ──────────────────────────────────────────────────────────
-const container = $('globe-container');
-const W=container.clientWidth, H2=container.clientHeight;
-
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-renderer.setSize(W, H2);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-renderer.setClearColor(0x000000,0);
-container.appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, W/H2, 0.1, 1000);
-camera.position.set(0, 0, 2.8);
-
-// Globe sphere
-const globeGeo = new THREE.SphereGeometry(1, 64, 64);
-const globeMat = new THREE.MeshPhongMaterial({
-  color: 0x011428,
-  emissive: 0x001833,
-  specular: 0x0044aa,
-  shininess: 20,
-  transparent: true,
-  opacity: 0.98,
-});
-const globe = new THREE.Mesh(globeGeo, globeMat);
-scene.add(globe);
-
-// continents added below
-
-// Globe wireframe overlay
-const wireMat = new THREE.MeshBasicMaterial({
-  color: 0x0a3060,
-  wireframe: true,
-  transparent: true,
-  opacity: 0.15,
-});
-const wireGeo = new THREE.SphereGeometry(1.001, 36, 36);
-scene.add(new THREE.Mesh(wireGeo, wireMat));
-
-// Atmosphere glow
-const atmGeo = new THREE.SphereGeometry(1.08, 64, 64);
-const atmMat = new THREE.MeshBasicMaterial({
-  color: 0x0066cc,
-  transparent: true,
-  opacity: 0.06,
-  side: THREE.BackSide,
-});
-scene.add(new THREE.Mesh(atmGeo, atmMat));
-
-// Outer glow ring
-const glowGeo = new THREE.SphereGeometry(1.12, 64, 64);
-const glowMat = new THREE.MeshBasicMaterial({
-  color: 0x00aaff,
-  transparent: true,
-  opacity: 0.03,
-  side: THREE.BackSide,
-});
-scene.add(new THREE.Mesh(glowGeo, glowMat));
-
-// Lights
-scene.add(new THREE.AmbientLight(0x112244, 1.2));
-const dirLight = new THREE.DirectionalLight(0x4488ff, 0.8);
-dirLight.position.set(5, 3, 5);
-scene.add(dirLight);
-const backLight = new THREE.DirectionalLight(0x001155, 0.4);
-backLight.position.set(-5, -3, -5);
-scene.add(backLight);
-
-// Stars
-const starGeo = new THREE.BufferGeometry();
-const starVerts = [];
-for(let i=0;i<3000;i++){
-  const theta=Math.random()*Math.PI*2;
-  const phi=Math.acos(2*Math.random()-1);
-  const r=80+Math.random()*120;
-  starVerts.push(r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
+function renderTxFeed(){
+  const feed=document.getElementById('tx-feed');if(!feed)return;
+  feed.innerHTML=feedItems.slice(0,6).map((it,i)=>{
+    const ac=it.usd>=10e6?'huge':it.usd>=1e6?'big':'';
+    const disp=it.amt>=1000?fN(it.amt)+' '+it.code:it.amt.toFixed(2)+' '+it.code;
+    return`<div class="tx-item" style="animation-delay:${i*60}ms" onclick="window.open('https://stellar.expert/explorer/public/tx/${it.hash}','_blank')">
+      <div class="tx-type">Transfer · ${it.code}</div>
+      <div class="tx-amount ${ac}">${disp}</div>
+      <div class="tx-sub">${it.from?.slice(0,6)}...→${it.to?.slice(0,6)}...</div>
+      <div class="tx-time">${ago(it.ts)} ago</div>
+    </div>`;
+  }).join('');
 }
-starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts,3));
-scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:.15,transparent:true,opacity:.6})));
-
-// Transaction arcs
-const COLORS_HEX = [0x00c8ff, 0xff8c00, 0x00e87a, 0xff3d5a, 0xc084fc];
-const arcs = [];
-const arcGroup = new THREE.Group();
-scene.add(arcGroup);
-
-// Dot markers
-const dotGroup = new THREE.Group();
-scene.add(dotGroup);
-
-function latLngToVec3(lat, lng, r=1.02){
-  const phi=(90-lat)*Math.PI/180;
-  const theta=(lng+180)*Math.PI/180;
-  return new THREE.Vector3(
-    -r*Math.sin(phi)*Math.cos(theta),
-    r*Math.cos(phi),
-    r*Math.sin(phi)*Math.sin(theta)
-  );
-}
-
-// ── CONTINENTS ─────────────────────────────────────────────────────────────
-// Land mask — real approximate coordinates of continents
-function buildContinents() {
-  const regions = [
-    // North America (mainland)
-    {lat:[24,70],lng:[-168,-52],n:400,shape:(la,ln)=>
-      !(la>60&&ln<-140) && !(la<25&&ln>-80) && !(la>60&&ln>-60)},
-    // Central America + Caribbean
-    {lat:[7,25],lng:[-92,-60],n:80,shape:()=>true},
-    // South America
-    {lat:[-56,13],lng:[-82,-34],n:350,shape:(la,ln)=>
-      !(la<-50&&ln>-65) && !(la>0&&ln>-50)},
-    // Europe
-    {lat:[35,71],lng:[-11,40],n:220,shape:(la,ln)=>
-      !(la>65&&ln>30) && !(la<37&&ln>15)},
-    // Africa
-    {lat:[-35,37],lng:[-18,52],n:380,shape:(la,ln)=>
-      !(la<-20&&ln>42) && !(la>30&&ln>35)},
-    // Middle East
-    {lat:[15,42],lng:[34,63],n:120,shape:()=>true},
-    // Russia/Siberia
-    {lat:[50,75],lng:[30,180],n:300,shape:()=>true},
-    // Central/South Asia
-    {lat:[5,55],lng:[60,140],n:350,shape:(la,ln)=>
-      !(la<15&&ln>120) && !(la>50&&ln>135)},
-    // Southeast Asia + Indonesia
-    {lat:[-10,25],lng:[95,145],n:180,shape:()=>true},
-    // Japan/Korea
-    {lat:[30,46],lng:[128,146],n:60,shape:()=>true},
-    // Australia
-    {lat:[-44,-10],lng:[113,154],n:200,shape:(la,ln)=>
-      !(la<-40&&ln>148) && !(la>-12&&ln<120)},
-    // New Zealand
-    {lat:[-47,-34],lng:[166,178],n:30,shape:()=>true},
-    // Greenland
-    {lat:[60,84],lng:[-56,-16],n:60,shape:()=>true},
-    // Antarctica
-    {lat:[-90,-70],lng:[-180,180],n:80,shape:()=>true},
-  ];
-
-  const verts=[], cols=[];
-  regions.forEach(reg=>{
-    let placed=0, tries=0;
-    while(placed<reg.n && tries<reg.n*10){
-      tries++;
-      const la=reg.lat[0]+Math.random()*(reg.lat[1]-reg.lat[0]);
-      const ln=reg.lng[0]+Math.random()*(reg.lng[1]-reg.lng[0]);
-      if(!reg.shape(la,ln)) continue;
-      const pos=latLngToVec3(la,ln,1.003);
-      verts.push(pos.x,pos.y,pos.z);
-      // Ocean blue-green for land
-      cols.push(0.03,0.14,0.28);
-      placed++;
-    }
-  });
-
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-  geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
-  const mat=new THREE.PointsMaterial({size:.005,vertexColors:true,transparent:true,opacity:.75});
-  const pts=new THREE.Points(geo,mat);
-  scene.add(pts);
-  return pts;
-}
-const contPoints = buildContinents();
-
-// Known financial hubs
-const HUBS = [
-  [40.7128,-74.006],  // New York
-  [51.5074,-0.1278],  // London
-  [35.6762,139.6503], // Tokyo
-  [22.3193,114.1694], // Hong Kong
-  [1.3521,103.8198],  // Singapore
-  [48.8566,2.3522],   // Paris
-  [55.7558,37.6173],  // Moscow
-  [52.5200,13.4050],  // Berlin
-  [37.5665,126.9780], // Seoul
-  [25.2048,55.2708],  // Dubai
-  [-23.5505,-46.6333],// São Paulo
-  [19.0760,72.8777],  // Mumbai
-  [31.2304,121.4737], // Shanghai
-  [43.6532,-79.3832], // Toronto
-  [-33.8688,151.2093],// Sydney
-];
-
-// Add hub dots
-HUBS.forEach(([lat,lng])=>{
-  const pos = latLngToVec3(lat,lng,1.015);
-  const dotGeo = new THREE.SphereGeometry(0.008,8,8);
-  const dotMat = new THREE.MeshBasicMaterial({color:0x0088ff,transparent:true,opacity:.8});
-  const dot = new THREE.Mesh(dotGeo,dotMat);
-  dot.position.copy(pos);
-  dotGroup.add(dot);
-  // Ring
-  const ringGeo = new THREE.RingGeometry(0.012,0.018,16);
-  const ringMat = new THREE.MeshBasicMaterial({color:0x0088ff,transparent:true,opacity:.3,side:THREE.DoubleSide});
-  const ring = new THREE.Mesh(ringGeo,ringMat);
-  ring.position.copy(pos);
-  ring.lookAt(0,0,0);
-  dotGroup.add(ring);
-});
-
-function createArc(from, to, color){
-  const start = latLngToVec3(from[0],from[1]);
-  const end   = latLngToVec3(to[0],to[1]);
-  const mid   = new THREE.Vector3().addVectors(start,end).multiplyScalar(0.5);
-  mid.normalize().multiplyScalar(1.4 + Math.random()*0.3);
-
-  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-  const points = curve.getPoints(60);
-  const geo = new THREE.BufferGeometry().setFromPoints(points);
-  const mat = new THREE.LineBasicMaterial({color, transparent:true, opacity:0});
-  const line = new THREE.Line(geo, mat);
-
-  // Moving dot
-  const dotGeo = new THREE.SphereGeometry(0.012,8,8);
-  const dotMat = new THREE.MeshBasicMaterial({color, transparent:true, opacity:0});
-  const dot = new THREE.Mesh(dotGeo, dotMat);
-
-  // Glow dot (larger, dimmer)
-  const glowGeo = new THREE.SphereGeometry(0.025,8,8);
-  const glowMat = new THREE.MeshBasicMaterial({color, transparent:true, opacity:0});
-  const glow = new THREE.Mesh(glowGeo, glowMat);
-
-  arcGroup.add(line);
-  arcGroup.add(dot);
-  arcGroup.add(glow);
-
-  return {line, dot, glow, curve, points, mat, dotMat, glowMat, prog:0, spd:0.006+Math.random()*.004, active:false, color, from, to};
-}
-
-function spawnArc(){
-  const i1 = Math.floor(Math.random()*HUBS.length);
-  let i2 = Math.floor(Math.random()*HUBS.length);
-  while(i2===i1) i2=Math.floor(Math.random()*HUBS.length);
-  const color = COLORS_HEX[Math.floor(Math.random()*COLORS_HEX.length)];
-  const arc = createArc(HUBS[i1], HUBS[i2], color);
-  arc.active=true;
-  arcs.push(arc);
-}
-
-// Spawn 1 arc every 2-3 seconds
-let lastSpawn=0;
-let nextSpawnDelay=2000+Math.random()*1000;
-
-function updateArcs(now){
-  // Spawn up to 2 arcs per second, max 14 active
-  if(now-lastSpawn > nextSpawnDelay){
-    const active = arcs.filter(a=>a.active).length;
-    if(active < 14){
-      spawnArc();
-      if(active < 8) spawnArc(); // spawn 2 at once when few active
-    }
-    lastSpawn=now;
-    nextSpawnDelay=500+Math.random()*500; // 0.5-1s between spawns
-  }
-
-  for(let i=arcs.length-1;i>=0;i--){
-    const a=arcs[i];
-    if(!a.active)continue;
-    a.prog+=a.spd;
-
-    const t=Math.min(a.prog,1);
-    // Fade in/out
-    const alpha = t<0.1?t/0.1:t>0.85?(1-t)/0.15:1;
-
-    a.mat.opacity=alpha*0.7;
-    a.dotMat.opacity=alpha*0.95;
-    a.glowMat.opacity=alpha*0.25;
-
-    // Update line to show only up to t
-    const visiblePts = a.points.slice(0, Math.floor(t*a.points.length)+1);
-    if(visiblePts.length>1){
-      a.line.geometry.setFromPoints(visiblePts);
-    }
-
-    // Move dot along curve
-    const dotPos = a.curve.getPoint(t);
-    a.dot.position.copy(dotPos);
-    a.glow.position.copy(dotPos);
-
-    if(a.prog>=1){
-      // Clean up
-      arcGroup.remove(a.line);
-      arcGroup.remove(a.dot);
-      arcGroup.remove(a.glow);
-      a.line.geometry.dispose();
-      a.line.material.dispose();
-      a.dot.geometry.dispose();
-      a.dot.material.dispose();
-      a.glow.geometry.dispose();
-      a.glow.material.dispose();
-      arcs.splice(i,1);
-    }
-  }
-}
-
-// Slow rotation
-let rotY=0;
-function animate(){
-  requestAnimationFrame(animate);
-  const now=Date.now();
-  rotY+=0.0008;
-  globe.rotation.y=rotY;
-  contPoints.rotation.y=rotY;
-  arcGroup.rotation.y=rotY;
-  dotGroup.rotation.y=rotY;
-  updateArcs(now);
-  renderer.render(scene,camera);
-}
-animate();
-
-window.addEventListener('resize',()=>{
-  const W2=container.clientWidth,H3=container.clientHeight;
-  camera.aspect=W2/H3;camera.updateProjectionMatrix();
-  renderer.setSize(W2,H3);
-});
+</script>
 
 // ── DATA ───────────────────────────────────────────────────────────────────
+</script>
+<script>
 async function fetchPrice(){
   try{
     const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');
     const d=await r.json();
     XLM=parseFloat(d?.stellar?.usd)||XLM;
     animNum($('s-price'),XLM,v=>'$'+v.toFixed(4));
+  }catch(e){}
+}
+
+async function fetchFromAPI(){
+  try{
+    const r=await fetch('https://api.stellarmonitor.xyz/api/alerts?limit=500');
+    if(!r.ok) return;
+    const d=await r.json();
+    const alerts=d.alerts||[];
+    if(!alerts.length) return;
+    let cnt=alerts.length, usdc=0, big=0;
+    alerts.forEach(a=>{
+      if((a.asset==='USDC'||a.selling==='USDC')&&a.amount) usdc+=a.amount;
+      if((a.usd_value||0)>big) big=a.usd_value||0;
+    });
+    animNum($('s-alerts'),cnt,v=>v);
+    animNum($('s-usdc'),usdc,fN);
+    animNum($('s-biggest'),big,fU);
+    $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
+    feedItems=alerts.slice(0,8).map(a=>{
+      const code=a.asset||a.selling||'XLM';
+      const amt=a.amount||0;
+      return{code,amt,usd:a.usd_value||0,from:a.from_full||a.sender||'',to:a.to_full||'',ts:a.created_at,hash:a.tx_hash||''};
+    });
+    renderTxFeed();
   }catch(e){}
 }
 
@@ -473,8 +431,7 @@ async function fetchOps(){
     const d=await r.json();
     const ops=d?._embedded?.records||[];
     let cnt=0,usdc=0,big=0;
-    const items=[];
-    const seen=new Set();
+    const items=[],seen=new Set();
     ops.forEach(op=>{
       if(op.type!=='payment')return;
       const hash=op.transaction_hash;
@@ -493,41 +450,34 @@ async function fetchOps(){
     animNum($('s-usdc'),usdc,fN);
     animNum($('s-biggest'),big,fU);
     $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
-    renderFeed();
+    renderTxFeed();
   }catch(e){}
-}
-
-function renderFeed(){
-  const feed=$('tx-feed');if(!feed)return;
-  feed.innerHTML=feedItems.slice(0,6).map((it,i)=>{
-    const ac=it.usd>=10e6?'huge':it.usd>=1e6?'big':'';
-    const disp=it.amt>=1000?fN(it.amt)+' '+it.code:it.amt.toFixed(2)+' '+it.code;
-    return`<div class="tx-item" style="animation-delay:${i*60}ms" onclick="window.open('https://stellar.expert/explorer/public/tx/${it.hash}','_blank')">
-      <div class="tx-type">Transfer · ${it.code}</div>
-      <div class="tx-amount ${ac}">${disp}</div>
-      <div class="tx-sub">${it.from?.slice(0,6)}...→${it.to?.slice(0,6)}...</div>
-      <div class="tx-time">${ago(it.ts)} ago</div>
-    </div>`;
-  }).join('');
 }
 
 function buildTicker(){
   const items=[['XLM','Stellar'],['USDC/AQUA','SDEX'],['Soroban','Active'],['Whale Alerts','24/7'],['Fee','0.00001 XLM'],['TVL','$211M+'],['Accounts','10M+']];
   const h=items.map(([l,v])=>`<div class="ti"><span>${l}</span><b>${v}</b><span class="u">▲</span></div>`).join('');
-  $('tkr').innerHTML=h+h;
+  document.getElementById('tkr').innerHTML=h+h;
 }
 
-let _lastXLM = 0;
+let _lastXLM=0;
 setInterval(()=>{
-  const fresh = '$'+XLM.toFixed(4);
-  const el = $('s-price');
-  if(el && el.textContent !== fresh && Math.abs(XLM - _lastXLM) > 0.00005) {
-    animNum(el, XLM, v=>'$'+v.toFixed(4));
-    _lastXLM = XLM;
+  const fresh='$'+XLM.toFixed(4);
+  const el=document.getElementById('s-price');
+  if(el&&el.textContent!==fresh&&Math.abs(XLM-_lastXLM)>0.00005){
+    animNum(el,XLM,v=>'$'+v.toFixed(4));
+    _lastXLM=XLM;
   }
-}, 2000);
-buildTicker();fetchPrice();fetchOps();
-setInterval(fetchOps,15000);setInterval(fetchPrice,60000);
+},2000);
+
+buildTicker();fetchPrice();
+fetchFromAPI();
+fetchOps();
+setInterval(fetchFromAPI,60000);
+setInterval(fetchOps,15000);
+setInterval(fetchPrice,60000);
 </script>
+
+
 </body>
 </html>
