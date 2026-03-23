@@ -337,22 +337,30 @@ async function scan(){
   const isAllTime=filters.periodHours===0;
   const cutoffDate=isAllTime?new Date(0):new Date(Date.now()-filters.periodHours*3600000);
   const label=document.querySelector('#fc-period .chip.on')?.textContent||'';
-  const maxPages=isAllTime?200:filters.periodHours<=1?2:filters.periodHours<=24?5:filters.periodHours<=168?15:50;
+  const maxPages=isAllTime?100:filters.periodHours<=1?2:filters.periodHours<=24?5:filters.periodHours<=168?15:50;
   try{
     let cursor=null,pages=0,allOps=[];
     const baseUrl=isWallet?`${H}/accounts/${q}/payments?limit=200&order=desc&include_failed=false`:`${H}/transactions/${q}/operations?limit=200`;
+    let errorCount=0;
     while(!_fetchAbort){
       const url=cursor?baseUrl+'&cursor='+cursor:baseUrl;
       let r,d;
       try{
         r=await fetch(url);
         if(!r.ok){
-          // Try without cursor on error (cursor may have expired)
-          if(cursor){cursor=null;continue;}
-          break;
+          errorCount++;
+          if(errorCount>=3||!cursor) break;
+          cursor=null; // reset cursor and retry from start
+          continue;
         }
         d=await r.json();
-      }catch(e){break;}
+        errorCount=0;
+      }catch(e){
+        errorCount++;
+        if(errorCount>=3) break;
+        await new Promise(r=>setTimeout(r,500));
+        continue;
+      }
       const batch=d?._embedded?.records||[];
       if(!batch.length)break;
       batch.forEach(op=>enrichOp(op));allOps.push(...batch);pages++;
@@ -361,9 +369,21 @@ async function scan(){
       const m=next.match(/cursor=([^&]+)/);cursor=m?m[1]:null;if(!cursor)break;
       if(pages>=maxPages)break;
       showProgress(allOps.length,pages,label);
-      await new Promise(r=>setTimeout(r,100));
+      await new Promise(r=>setTimeout(r,isAllTime?150:80));
     }
-    if(!allOps.length)throw new Error('No transactions found for this address');
+    if(!allOps.length){
+      // Try operations endpoint as fallback
+      try{
+        const fb=await fetch(`${H}/accounts/${q}/operations?limit=200&order=desc&include_failed=false`);
+        if(fb.ok){
+          const fd=await fb.json();
+          const fbatch=fd?._embedded?.records||[];
+          fbatch.forEach(op=>enrichOp(op));
+          allOps.push(...fbatch);
+        }
+      }catch(e){}
+    }
+    if(!allOps.length) throw new Error('No transactions found');
     if(_fetchAbort)return;
     _scanOps=isAllTime?allOps:allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
     renderResults(applyFilters(_scanOps));
