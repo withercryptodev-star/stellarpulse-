@@ -240,7 +240,7 @@ let XLM=0.174;
 const $=id=>document.getElementById(id);
 const fU=n=>{if(!n||n<=0)return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toFixed(0)};
 const fN=n=>{if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toFixed(2)};
-const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';return Math.floor(s/3600)+'h ago'};
+const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';if(s<2592000)return Math.floor(s/86400)+'d ago';if(s<31536000)return Math.floor(s/2592000)+'mo ago';return Math.floor(s/31536000)+'y ago'};
 const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
 
 const EXCHANGES=new Set(['GBVUDZFNMQBBKXZ3FGPXFCFG5ZFWDRXCWB7EBJSN4Y5BVMHFEVVVT2','GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC','GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN','GBTMY37BHEUNXSESORCPQR4BKRW3QABQBLSRLHM62MQLPJGZJ5EJWQP','GCM4PT6XDZBWOOENDS6FVH4GZMEBXJATD3SSKPKFPUDIEFULBKDFOZY','GAVA7FY3KBXJVZDBX254LPM53YXRUEVLM5BXMXZOC7ZIW3HXFP6LT4SR']);
@@ -385,7 +385,14 @@ async function scan(){
     }
     if(!allOps.length) throw new Error('No transactions found');
     if(_fetchAbort)return;
-    _scanOps=isAllTime?allOps:allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
+    const rawOps=isAllTime?allOps:allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
+    // Deduplicate by transaction_hash
+    const seenHashes=new Set();
+    _scanOps=rawOps.filter(op=>{
+      const h=op.transaction_hash||op.id||Math.random();
+      if(seenHashes.has(h))return false;
+      seenHashes.add(h);return true;
+    });
     renderResults(applyFilters(_scanOps));
     if(pages>=maxPages){const m=$('results-meta');if(m)m.innerHTML+=` <span style="color:var(--gray2);font-size:9px">· ${pages} pages</span>`;}
   }catch(e){$('sres').innerHTML=`<div class="rempty">Error: ${e.message}</div>`;}
