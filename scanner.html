@@ -282,7 +282,12 @@ function applyFilters(ops){
     if(specials.round&&!isRound(op._amt||0))return false;
     return true;
   });
-  if(filters.sort==='usd')rows.sort((a,b)=>(b._usd||0)-(a._usd||0));
+  if(filters.sort==='usd')
+    rows.sort((a,b)=>{
+      const diff=(b._usd||0)-(a._usd||0);
+      if(diff!==0)return diff;
+      return new Date(b.created_at)-new Date(a.created_at); // same amount → newest first
+    });
   else rows.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   if(specials.repeat){const ac={};rows.forEach(op=>{const k=Math.round(op._amt||0);ac[k]=(ac[k]||0)+1;});rows=rows.filter(op=>ac[Math.round(op._amt||0)]>1);}
   if(specials.circular){const seen={},circ=new Set();rows.forEach(op=>{const fwd=(op.from||'')+'→'+(op.to||'');const rev=(op.to||'')+'→'+(op.from||'');if(seen[rev]){circ.add(fwd);circ.add(rev);}seen[fwd]=true;});rows=rows.filter(op=>circ.has((op.from||'')+'→'+(op.to||'')));}
