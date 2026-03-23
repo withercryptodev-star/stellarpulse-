@@ -27,28 +27,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 .live-badge{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--green)}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-
-/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .stat-box{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:16px 20px}
 .sb-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px}
 .sb-val{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--white);overflow:hidden;height:26px;display:flex;align-items:center}
 .sb-val.cyan{color:var(--cyan)}.sb-val.green{color:var(--green)}
-
-/* FILTERS */
 .filter-bar{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:14px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
 .fb-group{display:flex;flex-direction:column;gap:5px}
 .fb-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2)}
-.fb-input{background:var(--dark);border:1px solid var(--edge);border-radius:3px;padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--white);outline:none;transition:border-color .15s;width:200px}
+.fb-input{background:var(--dark);border:1px solid var(--edge);border-radius:3px;padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--white);outline:none;transition:border-color .15s}
 .fb-input:focus{border-color:var(--cyan)}
 .fb-input::placeholder{color:var(--gray2)}
 .fb-chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;border:1px solid var(--edge);color:var(--gray2);border-radius:2px;cursor:pointer;transition:all .15s;background:transparent}
 .chip:hover,.chip.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06)}
-.fb-apply{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 16px;background:var(--cyan);color:var(--bg);border:none;border-radius:3px;cursor:pointer;transition:all .15s;align-self:flex-end}
+.fb-apply{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;background:var(--cyan);color:var(--bg);border:none;border-radius:3px;cursor:pointer;transition:all .15s}
 .fb-apply:hover{background:#33d6ff}
-
-/* LAYOUT */
+.fb-apply:disabled{opacity:.5;cursor:default}
 .feed-layout{display:grid;grid-template-columns:1fr 260px;gap:16px}
 .feed-table{background:var(--panel);border:1px solid var(--edge);border-radius:4px;overflow:hidden}
 .feed-hdr{display:grid;grid-template-columns:90px 1fr 120px 90px;padding:10px 20px;background:var(--panel2);border-bottom:1px solid var(--edge);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2)}
@@ -66,8 +61,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 .famt{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--white);text-align:right}
 .famt.big{color:var(--orange)}.famt.huge{color:var(--red)}
 .ftime{font-family:var(--mono);font-size:10px;color:var(--gray2);text-align:right}
-
-/* PAGINATION */
 .pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--edge);background:var(--panel2)}
 .pg-info{font-family:var(--mono);font-size:10px;color:var(--gray2)}
 .pg-btns{display:flex;gap:6px}
@@ -75,8 +68,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 .pg-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}
 .pg-btn:disabled{opacity:.3;cursor:default}
 .pg-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06)}
-
-/* SIDEBAR */
 .sidebar{display:flex;flex-direction:column;gap:14px}
 .widget{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:14px}
 .wt{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:10px}
@@ -89,7 +80,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 .ibt{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .ibf{height:100%;border-radius:2px;transition:width 1s ease}
 .ibc{font-family:var(--mono);font-size:9px;color:var(--gray2);width:24px;text-align:right}
-@media(max-width:900px){.feed-layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}.filter-bar{gap:8px}}
+.loading-msg{padding:40px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)}
+.loading-spin{width:24px;height:24px;border:2px solid var(--edge);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.feed-layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -112,43 +106,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 
   <div class="stats-row">
     <div class="stat-box"><div class="sb-label">XLM Price</div><div class="sb-val cyan" id="m-price">—</div></div>
-    <div class="stat-box"><div class="sb-label">Alerts (period)</div><div class="sb-val" id="m-alerts">—</div></div>
-    <div class="stat-box"><div class="sb-label">Volume (period)</div><div class="sb-val green" id="m-usdc">—</div></div>
+    <div class="stat-box"><div class="sb-label">Transactions</div><div class="sb-val" id="m-alerts">—</div></div>
+    <div class="stat-box"><div class="sb-label">Total Volume</div><div class="sb-val green" id="m-usdc">—</div></div>
     <div class="stat-box"><div class="sb-label">Biggest tx</div><div class="sb-val" id="m-biggest">—</div></div>
   </div>
 
-  <!-- FILTERS -->
   <div class="filter-bar">
     <div class="fb-group">
-      <div class="fb-label">Token / Contract address</div>
-      <input class="fb-input" id="f-token" placeholder="e.g. USDC or GA... issuer address">
-    </div>
-    <div class="fb-group">
-      <div class="fb-label">Min amount (tokens)</div>
-      <input class="fb-input" id="f-minamt" placeholder="e.g. 10000" style="width:140px">
+      <div class="fb-label">Token code or issuer</div>
+      <input class="fb-input" id="f-token" placeholder="USDC, XLM, GUARDIAN..." style="width:220px">
     </div>
     <div class="fb-group">
       <div class="fb-label">Min USD value</div>
-      <input class="fb-input" id="f-minusd" placeholder="1000" style="width:120px" value="1000">
+      <input class="fb-input" id="f-minusd" placeholder="1000" style="width:110px" value="1000">
     </div>
     <div class="fb-group">
       <div class="fb-label">Period</div>
       <div class="fb-chips">
-        <span class="chip on" onclick="setPeriod(this,1)">1D</span>
-        <span class="chip" onclick="setPeriod(this,7)">1W</span>
-        <span class="chip" onclick="setPeriod(this,30)">1M</span>
-        <span class="chip" onclick="setPeriod(this,180)">6M</span>
-        <span class="chip" onclick="setPeriod(this,365)">1Y</span>
-        <span class="chip" onclick="setPeriod(this,0)">All</span>
+        <span class="chip on" data-days="1"  onclick="setPeriod(this)">1D</span>
+        <span class="chip"    data-days="7"  onclick="setPeriod(this)">1W</span>
+        <span class="chip"    data-days="30" onclick="setPeriod(this)">1M</span>
+        <span class="chip"    data-days="180"onclick="setPeriod(this)">6M</span>
+        <span class="chip"    data-days="365"onclick="setPeriod(this)">1Y</span>
+        <span class="chip"    data-days="0"  onclick="setPeriod(this)">All</span>
       </div>
     </div>
-    <button class="fb-apply" onclick="applyFiltersAndRender()">Apply</button>
+    <button class="fb-apply" id="apply-btn" onclick="applyAndLoad()">Apply</button>
   </div>
 
   <div class="feed-layout">
     <div class="feed-table">
       <div class="feed-hdr"><div>Type</div><div>Details</div><div style="text-align:right">Amount</div><div style="text-align:right">Time</div></div>
-      <div id="fbody"><div style="padding:32px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)">Loading...</div></div>
+      <div id="fbody"><div class="loading-msg"><div class="loading-spin"></div>Loading...</div></div>
       <div class="pagination" id="pagination" style="display:none">
         <div class="pg-info" id="pg-info"></div>
         <div class="pg-btns" id="pg-btns"></div>
@@ -167,12 +156,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
         <div class="wr"><div class="wk">Whale USDC</div><div class="wv" id="t-whale-usdc">0</div></div>
         <div class="wr"><div class="wk">Whale XLM</div><div class="wv" id="t-whale-xlm">0</div></div>
         <div class="wr"><div class="wk">SDEX</div><div class="wv" id="t-sdex">0</div></div>
-        <div class="wr"><div class="wk">Airdrop</div><div class="wv" id="t-airdrop">0</div></div>
+        <div class="wr"><div class="wk">Other</div><div class="wv" id="t-other">0</div></div>
       </div>
       <div class="widget">
-        <div class="wt">System Status</div>
+        <div class="wt">Status</div>
         <div class="wr"><div class="wk">Bot</div><div class="wv" style="color:var(--green)">● Online</div></div>
-        <div class="wr"><div class="wk">Last alert</div><div class="wv" id="last-alert" style="color:var(--gray2)">—</div></div>
+        <div class="wr"><div class="wk">Source</div><div class="wv" id="data-source" style="color:var(--gray2)">API</div></div>
         <div class="wr"><div class="wk">Updated</div><div class="wv" id="upd-time" style="color:var(--gray2)">—</div></div>
       </div>
     </div>
@@ -180,25 +169,25 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 </div>
 
 <script>
-const H='https://horizon.stellar.org';
-const API='https://api.stellarmonitor.xyz';
-let XLM=0.174;
-let allFeed=[];
-let currentPage=0;
-const PAGE_SIZE=50;
-let ic={1:0,2:0,3:0,4:0};
+const H   = 'https://horizon.stellar.org';
+const API = 'https://api.stellarmonitor.xyz';
+let XLM = 0.174;
+let allFeed = [];
+let currentPage = 0;
+const PAGE_SIZE = 50;
+let ic = {1:0,2:0,3:0,4:0};
 
 // Filter state
-let fPeriodDays=1;
-let fMinUsd=1000;
-let fToken='';
-let fMinAmt=0;
+let fPeriodDays = 1;
+let fMinUsd = 1000;
+let fToken = '';
+let isLoading = false;
 
-const $=id=>document.getElementById(id);
-const fU=n=>{if(!n||n<=0)return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toFixed(0)};
-const fN=n=>{if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toFixed(2)};
-const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'};
-const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
+const $ = id => document.getElementById(id);
+const fU = n => {if(!n||n<=0)return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toFixed(0)};
+const fN = n => {if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toFixed(2)};
+const ago = ts => {const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'};
+const pill = (t,c) => `<span class="pill ${c}">${t}</span>`;
 
 function animNum(el,val,fmt){
   if(!el)return;
@@ -211,204 +200,271 @@ function animNum(el,val,fmt){
   },120);
 }
 
-function setPeriod(el, days){
-  fPeriodDays=days;
+function setPeriod(el){
+  fPeriodDays = parseInt(el.dataset.days);
   document.querySelectorAll('.fb-chips .chip').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
 }
 
-function applyFiltersAndRender(){
-  fMinUsd   = parseFloat($('f-minusd').value)||0;
-  fToken    = ($('f-token').value||'').trim().toLowerCase();
-  fMinAmt   = parseFloat($('f-minamt').value)||0;
-  currentPage=0;
-  const filtered=getFiltered();
-  updateStats(filtered);
-  renderPage(0, filtered);
+// ── Convert Horizon op to feed item ────────────────────────────────────────
+function opToItem(op){
+  const code = op.asset_type==='native'?'XLM':(op.asset_code||'?');
+  const amt  = parseFloat(op.amount||0);
+  const usd  = code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
+  const disp = amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
+  const from = op.from||'';
+  const to   = op.to||'';
+  const tp   = code==='USDC'||code==='USDT'?'WHALE':code==='XLM'?'XLM':'OTHER';
+  const tc   = tp==='WHALE'?'pw':tp==='XLM'?'pl':'ps';
+  return {tp,tc,code,desc:disp,
+    sub:`${from.slice(0,6)}...${from.slice(-4)} → ${to.slice(0,6)}...${to.slice(-4)}`,
+    usd,amt,ts:op.created_at,
+    hash:op.transaction_hash,
+    link:`https://stellar.expert/explorer/public/tx/${op.transaction_hash}`};
 }
 
-function getFiltered(){
-  const cutoff = fPeriodDays===0 ? 0 : Date.now()-fPeriodDays*86400000;
-  return allFeed.filter(it=>{
-    // Period filter
-    if(cutoff>0 && new Date(it.ts).getTime()<cutoff) return false;
-    // Min USD
-    if(it.usd<fMinUsd) return false;
-    // Token filter
-    if(fToken){
-      const code=(it.code||it.desc||'').toLowerCase();
-      const pair=(it.pair||'').toLowerCase();
-      if(!code.includes(fToken)&&!pair.includes(fToken)) return false;
+// ── Convert API alert to feed item ─────────────────────────────────────────
+function alertToItem(a){
+  const code = a.asset||a.selling||a.pair?.split('/')[0]||'XLM';
+  const usd  = a.usd_value||0;
+  const amt  = a.amount||a.total_usd||0;
+  const disp = amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
+  const from = a.from_full||a.sender||'';
+  const to   = a.to_full||'';
+  const sub  = from?`${from.slice(0,6)}...${from.slice(-4)} → ${to?(to.slice(0,6)+'...'+to.slice(-4)):'?'}`:(a.pair||'');
+  const tp   = a.type==='SDEX'?'SDEX':a.type?.includes('AIRDROP')?'AIRDROP':a.type?.includes('XLM')?'XLM':'WHALE';
+  const tc   = tp==='SDEX'?'ps':tp==='AIRDROP'?'pm':tp==='XLM'?'pl':'pw';
+  const ts   = (a.created_at||'').replace(' ','T')+'Z';
+  return {tp,tc,code,desc:disp,sub,usd,amt,ts,hash:a.tx_hash||'',link:a.link||''};
+}
+
+// ── Load from our API (bot alerts) ─────────────────────────────────────────
+async function loadFromAPI(){
+  const r = await fetch(`${API}/api/alerts?limit=10000`);
+  const d = await r.json();
+  return (d.alerts||[]).filter(a=>(a.usd_value||0)>0).map(alertToItem);
+}
+
+// ── Load from Horizon (full history) ───────────────────────────────────────
+async function loadFromHorizon(days, minUsd, tokenFilter, onProgress){
+  const cutoff  = days===0 ? new Date(0) : new Date(Date.now()-days*86400000);
+  const items   = [];
+  const seen    = new Set();
+  // Max pages depending on period
+  const maxPages = days===0?500:days<=1?10:days<=7?50:days<=30?150:days<=180?500:500;
+  let url = `${H}/payments?limit=200&order=desc&include_failed=false`;
+  let stop = false;
+
+  for(let page=0; page<maxPages && !stop; page++){
+    try{
+      const r = await fetch(url);
+      if(!r.ok) break;
+      const d = await r.json();
+      const ops = d?._embedded?.records||[];
+      if(!ops.length) break;
+
+      for(const op of ops){
+        const ts = new Date(op.created_at);
+        if(ts < cutoff){ stop=true; break; }
+        if(op.type!=='payment') continue;
+
+        const code = op.asset_type==='native'?'XLM':(op.asset_code||'?');
+        const amt  = parseFloat(op.amount||0);
+        const usd  = code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
+
+        if(usd < minUsd) continue;
+        if(seen.has(op.transaction_hash)) continue;
+        seen.add(op.transaction_hash);
+
+        // Token filter
+        if(tokenFilter && !code.toLowerCase().includes(tokenFilter) &&
+           !(op.asset_issuer||'').toLowerCase().includes(tokenFilter)) continue;
+
+        items.push(opToItem(op));
+      }
+
+      if(onProgress) onProgress(items.length, page+1);
+
+      const next = d?._links?.next?.href;
+      if(!next || stop) break;
+      url = next;
+      await new Promise(r=>setTimeout(r,80));
+    }catch(e){ break; }
+  }
+  return items;
+}
+
+// ── Main load function ──────────────────────────────────────────────────────
+async function applyAndLoad(){
+  if(isLoading) return;
+  isLoading = true;
+  fMinUsd = parseFloat($('f-minusd').value)||0;
+  fToken  = ($('f-token').value||'').trim().toLowerCase();
+  allFeed = [];
+  currentPage = 0;
+
+  const btn = $('apply-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+
+  $('fbody').innerHTML = '<div class="loading-msg"><div class="loading-spin"></div><span id="load-status">Loading...</span></div>';
+  $('data-source').textContent = 'Horizon';
+
+  try{
+    // Always load from Horizon for accurate history
+    const setStatus = (count, page) => {
+      const el = $('load-status');
+      if(el) el.textContent = `Fetched ${count} transactions (page ${page})...`;
+    };
+
+    const horizonItems = await loadFromHorizon(fPeriodDays, fMinUsd, fToken, setStatus);
+
+    // Also merge bot alerts (they may have SDEX/Soroban not in /payments)
+    try{
+      const apiItems = await loadFromAPI();
+      const hSeen = new Set(horizonItems.map(i=>i.hash));
+      const cutoff = fPeriodDays===0?new Date(0):new Date(Date.now()-fPeriodDays*86400000);
+      const extra = apiItems.filter(i=>
+        i.hash && !hSeen.has(i.hash) &&
+        new Date(i.ts)>=cutoff &&
+        i.usd>=fMinUsd &&
+        (!fToken||i.code?.toLowerCase().includes(fToken))
+      );
+      allFeed = [...horizonItems, ...extra];
+    }catch(e){
+      allFeed = horizonItems;
     }
-    // Min amount
-    if(fMinAmt>0 && (it.amt||0)<fMinAmt) return false;
-    return true;
-  });
+
+    // Sort by time
+    allFeed.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    $('data-source').textContent = `Horizon+API`;
+    $('upd-time').textContent = new Date().toLocaleTimeString('en',{hour12:false});
+
+    updateStats(allFeed);
+    renderPage(0, allFeed);
+
+  }catch(e){
+    $('fbody').innerHTML = `<div class="loading-msg">Error: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Apply';
+  isLoading = false;
 }
 
-function updateStats(filtered){
-  let usdc=0,big=0;
+// ── Live updates (only for 1D period) ─────────────────────────────────────
+let _lastHash = '';
+async function fetchLive(){
+  if(fPeriodDays!==1||isLoading) return;
+  try{
+    const r = await fetch(`${H}/payments?limit=20&order=desc&include_failed=false`);
+    if(!r.ok) return;
+    const d = await r.json();
+    const ops = d?._embedded?.records||[];
+    if(!ops.length||ops[0].transaction_hash===_lastHash) return;
+    _lastHash = ops[0].transaction_hash;
+
+    const newItems = [];
+    for(const op of ops){
+      if(op.type!=='payment') continue;
+      const hash = op.transaction_hash;
+      if(allFeed.find(f=>f.hash===hash)) continue;
+      const code = op.asset_type==='native'?'XLM':(op.asset_code||'?');
+      const amt  = parseFloat(op.amount||0);
+      const usd  = code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
+      if(usd<fMinUsd) continue;
+      if(fToken&&!code.toLowerCase().includes(fToken)) continue;
+      newItems.push(opToItem(op));
+    }
+    if(!newItems.length) return;
+    allFeed = [...newItems,...allFeed];
+    $('upd-label').textContent='Live · '+new Date().toLocaleTimeString('en',{hour12:false});
+    updateStats(allFeed);
+    if(currentPage===0) renderPage(0,allFeed);
+  }catch(e){}
+}
+
+// ── Stats & render ──────────────────────────────────────────────────────────
+function updateStats(feed){
+  let vol=0,big=0;
   ic={1:0,2:0,3:0,4:0};
-  let wUsdc=0,wXlm=0,sdex=0,airdrop=0;
-  filtered.forEach(it=>{
+  let wUsdc=0,wXlm=0,sdex=0,other=0;
+  feed.forEach(it=>{
     const u=it.usd||0;
-    usdc+=u; if(u>big)big=u;
+    vol+=u; if(u>big)big=u;
     if(u>=10e6)ic[4]++;else if(u>=1e6)ic[3]++;else if(u>=250000)ic[2]++;else if(u>=1000)ic[1]++;
     if(it.tp==='WHALE')wUsdc++;
     else if(it.tp==='XLM')wXlm++;
     else if(it.tp==='SDEX')sdex++;
-    else if(it.tp==='AIRDROP')airdrop++;
+    else other++;
   });
-  animNum($('m-alerts'),filtered.length,v=>v);
-  animNum($('m-usdc'),usdc,fU);
+  animNum($('m-alerts'),feed.length,v=>v);
+  animNum($('m-usdc'),vol,fU);
   animNum($('m-biggest'),big,fU);
   $('t-whale-usdc').textContent=wUsdc;
   $('t-whale-xlm').textContent=wXlm;
   $('t-sdex').textContent=sdex;
-  $('t-airdrop').textContent=airdrop;
-  renderBars();
-}
-
-// ── Fetch API ──────────────────────────────────────────────────────────────
-async function fetchFromAPI(){
-  try{
-    const r=await fetch(`${API}/api/alerts?limit=10000`);
-    if(!r.ok)return;
-    const d=await r.json();
-    const alerts=d.alerts||[];
-    if(!alerts.length)return;
-
-    const items=alerts
-      .filter(a=>(a.usd_value||0)>0)
-      .map(a=>{
-        const code=a.asset||a.selling||a.pair?.split('/')[0]||'XLM';
-        const usd=a.usd_value||0;
-        const amt=a.amount||a.total_usd||0;
-        const disp=amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
-        const from=a.from_full||a.sender||'';
-        const to=a.to_full||'';
-        const sub=from?`${from.slice(0,6)}...${from.slice(-4)} → ${to?(to.slice(0,6)+'...'+to.slice(-4)):'?'}`:(a.pair||'');
-        const tp=a.type==='SDEX'?'SDEX':a.type?.includes('AIRDROP')?'AIRDROP':a.type?.includes('XLM')?'XLM':'WHALE';
-        const tc=tp==='SDEX'?'ps':tp==='AIRDROP'?'pm':tp==='XLM'?'pl':'pw';
-        const ts=(a.created_at||'').replace(' ','T')+'Z';
-        return{tp,tc,code,desc:disp,sub,usd,amt,ts,hash:a.tx_hash||'',link:a.link||''};
-      });
-
-    items.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-
-    // Merge with live feed
-    const seen=new Set(items.map(i=>i.hash).filter(Boolean));
-    const liveOnly=allFeed.filter(l=>l.live&&l.hash&&!seen.has(l.hash));
-    allFeed=[...liveOnly,...items];
-
-    if(items.length) $('last-alert').textContent=ago(items[0].ts);
-    $('upd-time').textContent=new Date().toLocaleTimeString('en',{hour12:false});
-
-    const filtered=getFiltered();
-    updateStats(filtered);
-    if(currentPage===0) renderPage(0,filtered);
-
-  }catch(e){console.warn('API:',e);}
-}
-
-// ── Live from Horizon ──────────────────────────────────────────────────────
-let _lastHash='';
-async function fetchLive(){
-  try{
-    const r=await fetch(`${H}/payments?limit=20&order=desc&include_failed=false`);
-    if(!r.ok)return;
-    const d=await r.json();
-    const ops=d?._embedded?.records||[];
-    if(!ops.length||ops[0].transaction_hash===_lastHash)return;
-    _lastHash=ops[0].transaction_hash;
-
-    const newItems=[];
-    ops.forEach(op=>{
-      if(op.type!=='payment')return;
-      const hash=op.transaction_hash;
-      if(allFeed.find(f=>f.hash===hash))return;
-      const amt=parseFloat(op.amount||0);
-      const code=op.asset_type==='native'?'XLM':(op.asset_code||'?');
-      const usd=code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
-      if(usd<fMinUsd)return; // Apply min USD filter to live too
-      const disp=amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
-      const ts=op.created_at;
-      newItems.push({tp:'LIVE',tc:'ps',code,desc:disp,
-        sub:`${op.from?.slice(0,6)}...${op.from?.slice(-4)} → ${op.to?.slice(0,6)}...${op.to?.slice(-4)}`,
-        usd,amt,ts,hash,live:true});
-    });
-
-    if(!newItems.length)return;
-    allFeed=[...newItems,...allFeed];
-    $('upd-label').textContent='Live · '+new Date().toLocaleTimeString('en',{hour12:false});
-    const filtered=getFiltered();
-    updateStats(filtered);
-    if(currentPage===0) renderPage(0,filtered);
-  }catch(e){}
-}
-
-// ── Render ─────────────────────────────────────────────────────────────────
-function renderPage(page, filtered){
-  if(!filtered) filtered=getFiltered();
-  currentPage=page;
-  const total=filtered.length;
-  const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
-  const start=page*PAGE_SIZE;
-  const end=Math.min(start+PAGE_SIZE,total);
-  const slice=filtered.slice(start,end);
-
-  const b=$('fbody');
-  if(!slice.length){
-    b.innerHTML='<div style="padding:32px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)">No transactions match filters</div>';
-  } else {
-    b.innerHTML=slice.map((it,i)=>{
-      const ac=it.usd>=10e6?'huge':it.usd>=1e6?'big':'';
-      const link=it.link||`https://stellar.expert/explorer/public/tx/${it.hash}`;
-      return`<div class="feed-row" style="animation-delay:${Math.min(i,10)*20}ms" onclick="window.open('${link}','_blank')">
-        <div>${pill(it.tp,it.tc)}</div>
-        <div><div class="fdesc">${it.desc}</div><div class="fsub">${it.sub}</div></div>
-        <div class="famt ${ac}">${fU(it.usd)}</div>
-        <div class="ftime" data-ts="${it.ts}">${ago(it.ts)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  const pg=$('pagination');
-  if(total<=PAGE_SIZE){pg.style.display='none';return;}
-  pg.style.display='flex';
-  $('pg-info').textContent=`${start+1}–${end} of ${total}`;
-  let btns=`<button class="pg-btn" onclick="renderPage(${page-1},null)" ${page===0?'disabled':''}>← Prev</button>`;
-  const maxB=7,startP=Math.max(0,Math.min(page-3,totalPages-maxB)),endP=Math.min(totalPages,startP+maxB);
-  if(startP>0)btns+=`<button class="pg-btn" onclick="renderPage(0,null)">1</button><span style="color:var(--gray2);padding:0 4px;font-family:var(--mono);font-size:10px">...</span>`;
-  for(let p=startP;p<endP;p++)btns+=`<button class="pg-btn${p===page?' active':''}" onclick="renderPage(${p},null)">${p+1}</button>`;
-  if(endP<totalPages)btns+=`<span style="color:var(--gray2);padding:0 4px;font-family:var(--mono);font-size:10px">...</span><button class="pg-btn" onclick="renderPage(${totalPages-1},null)">${totalPages}</button>`;
-  btns+=`<button class="pg-btn" onclick="renderPage(${page+1},null)" ${page>=totalPages-1?'disabled':''}>Next →</button>`;
-  $('pg-btns').innerHTML=btns;
-}
-
-function renderBars(){
+  $('t-other').textContent=other;
   const tot=ic[1]+ic[2]+ic[3]+ic[4]||1;
   [1,2,3,4].forEach(k=>{$('ib'+k).style.width=(ic[k]/tot*100)+'%';$('ic'+k).textContent=ic[k];});
 }
+
+function renderPage(page, feed){
+  currentPage=page;
+  const total=feed.length;
+  const start=page*PAGE_SIZE;
+  const end=Math.min(start+PAGE_SIZE,total);
+  const slice=feed.slice(start,end);
+
+  const b=$('fbody');
+  if(!slice.length){
+    b.innerHTML='<div class="loading-msg">No transactions match filters</div>';
+    $('pagination').style.display='none';
+    return;
+  }
+
+  b.innerHTML=slice.map((it,i)=>{
+    const ac=it.usd>=10e6?'huge':it.usd>=1e6?'big':'';
+    const link=it.link||`https://stellar.expert/explorer/public/tx/${it.hash}`;
+    return`<div class="feed-row" style="animation-delay:${Math.min(i,10)*20}ms" onclick="window.open('${link}','_blank')">
+      <div>${pill(it.tp,it.tc)}</div>
+      <div><div class="fdesc">${it.desc}</div><div class="fsub">${it.sub}</div></div>
+      <div class="famt ${ac}">${fU(it.usd)}</div>
+      <div class="ftime" data-ts="${it.ts}">${ago(it.ts)}</div>
+    </div>`;
+  }).join('');
+
+  const pg=$('pagination');
+  const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(total<=PAGE_SIZE){pg.style.display='none';return;}
+  pg.style.display='flex';
+  $('pg-info').textContent=`${start+1}–${end} of ${total}`;
+  let btns=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← Prev</button>`;
+  const s=Math.max(0,Math.min(page-3,totalPages-7)),e=Math.min(totalPages,s+7);
+  if(s>0)btns+=`<button class="pg-btn" onclick="goPage(0)">1</button><span style="color:var(--gray2);padding:0 4px;font-size:10px">...</span>`;
+  for(let p=s;p<e;p++)btns+=`<button class="pg-btn${p===page?' active':''}" onclick="goPage(${p})">${p+1}</button>`;
+  if(e<totalPages)btns+=`<span style="color:var(--gray2);padding:0 4px;font-size:10px">...</span><button class="pg-btn" onclick="goPage(${totalPages-1})">${totalPages}</button>`;
+  btns+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page>=totalPages-1?'disabled':''}>Next →</button>`;
+  $('pg-btns').innerHTML=btns;
+}
+
+function goPage(p){ renderPage(p, allFeed); window.scrollTo(0,0); }
 
 async function fetchPrice(){
   try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');const d=await r.json();XLM=parseFloat(d?.stellar?.usd)||XLM;animNum($('m-price'),XLM,v=>'$'+v.toFixed(4));}catch(e){}
 }
 
-// Update timestamps every second
 let _lxlm=0;
 setInterval(()=>{
   document.querySelectorAll('.ftime[data-ts]').forEach(el=>{el.textContent=ago(el.dataset.ts);});
   if(Math.abs(XLM-_lxlm)>0.00005){animNum($('m-price'),XLM,v=>'$'+v.toFixed(4));_lxlm=XLM;}
 },1000);
 
-setInterval(fetchLive,1000);
-setInterval(fetchFromAPI,30000);
+setInterval(fetchLive,2000);
 setInterval(fetchPrice,60000);
 
 fetchPrice();
-fetchFromAPI();
-setTimeout(fetchLive,1500);
+applyAndLoad();
 </script>
 </body>
 </html>
