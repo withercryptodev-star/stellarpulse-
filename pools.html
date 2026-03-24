@@ -273,7 +273,10 @@ function enrichStellarExpertPool(p){
   const trades=p.trades||{};
   const domains=[a0.domain||'',a1.domain||''];
   const assetCodes=[assetA,assetB];
-  const isAqua=domains.some(d=>d.includes('aqua'))||assetCodes.some(c=>c==='AQUA')||assetCodes.some(c=>c==='AMM');
+  const issuers=[a0.asset||'',a1.asset||''];
+  const isAqua=domains.some(d=>d.includes('aqua.network'))||
+    assetCodes.some(c=>c==='AQUA')||
+    issuers.some(i=>i.startsWith('GARQ7O5JPBD2DDVE'));
   const source=isAqua?'AQUA':domains.some(d=>d.includes('ultrastellar')||d.includes('lobstr'))?'LOBSTR':'';
   return{id:p.id,pair:`${assetA}/${assetB}`,assetA,assetB,amtA,amtB,tvl,fee,
     totalShares:parseFloat(p.shares||0)/10000000,
