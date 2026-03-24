@@ -149,6 +149,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
       <div class="fb-chips">
         <span class="chip on" data-sort="volume" onclick="setSort(this)">Volume</span>
         <span class="chip"    data-sort="tvl"    onclick="setSort(this)">TVL</span>
+        <span class="chip"    data-sort="apr"    onclick="setSort(this)">APR</span>
         <span class="chip"    data-sort="fee"    onclick="setSort(this)">Fee</span>
       </div>
     </div>
@@ -217,7 +218,6 @@ async function fetchPools(){
     let url = `${H}/liquidity_pools?limit=200&order=desc`;
     let pages = 0;
 
-    // Fetch multiple pages
     while(pages < 10){
       const r = await fetch(url);
       if(!r.ok) break;
@@ -232,12 +232,9 @@ async function fetchPools(){
       await new Promise(r=>setTimeout(r,100));
     }
 
-    // Enrich each pool
     allPools = pools.map(p => enrichPool(p)).filter(p => p.tvl > 0);
-
-    // Fetch 7d volume for each pool (sample top 50)
-    await fetchVolumes(allPools.slice(0, 50));
-
+    await fetchVolumes(allPools);
+    checkAnomalies(allPools);
     updateStats();
     applyFilters();
     $('last-upd').textContent = 'Updated '+new Date().toLocaleTimeString('en',{hour12:false});
@@ -274,36 +271,95 @@ function enrichPool(p){
   };
 }
 
-// Estimate volume from trade history
+// Fetch volume from trades
 async function fetchVolumes(pools){
   const cutoff24 = new Date(Date.now()-86400000).toISOString();
   const cutoff7d  = new Date(Date.now()-7*86400000).toISOString();
 
-  // Fetch trades for top pools in parallel (batches of 5)
-  for(let i=0;i<Math.min(pools.length,30);i+=5){
+  // Process in batches of 5
+  for(let i=0; i<Math.min(pools.length,100); i+=5){
     const batch = pools.slice(i,i+5);
     await Promise.all(batch.map(async pool => {
       try{
-        const r = await fetch(`${H}/liquidity_pools/${pool.id}/trades?limit=200&order=desc`);
-        if(!r.ok) return;
-        const d = await r.json();
-        const trades = d?._embedded?.records||[];
         let vol24=0, vol7d=0;
-        trades.forEach(t=>{
-          const ts = t.ledger_close_time||t.created_at||'';
-          const baseAmt = parseFloat(t.base_amount||0);
-          const counterAmt = parseFloat(t.counter_amount||0);
-          const baseAsset = t.base_asset_type==='native'?'XLM':(t.base_asset_code||'');
-          const usd = baseAsset==='XLM'?baseAmt*XLM:(['USDC','USDT'].includes(baseAsset)?baseAmt:counterAmt*XLM);
-          if(ts>=cutoff24) vol24+=usd;
-          if(ts>=cutoff7d) vol7d+=usd;
-        });
-        pool.vol24 = vol24;
-        pool.vol7d = vol7d;
+        let url = `${H}/liquidity_pools/${pool.id}/trades?limit=200&order=desc`;
+        let pages=0, stop=false;
+        while(!stop && pages<5){
+          const r = await fetch(url);
+          if(!r.ok) break;
+          const d = await r.json();
+          const trades = d?._embedded?.records||[];
+          if(!trades.length) break;
+          for(const t of trades){
+            const ts = t.ledger_close_time||'';
+            if(ts && ts < cutoff7d){stop=true;break;}
+            // Calculate USD value of trade
+            const bAmt = parseFloat(t.base_amount||0);
+            const cAmt = parseFloat(t.counter_amount||0);
+            const bCode = t.base_asset_type==='native'?'XLM':(t.base_asset_code||'');
+            const cCode = t.counter_asset_type==='native'?'XLM':(t.counter_asset_code||'');
+            let usd=0;
+            if(bCode==='XLM') usd=bAmt*XLM;
+            else if(['USDC','USDT'].includes(bCode)) usd=bAmt;
+            else if(cCode==='XLM') usd=cAmt*XLM;
+            else if(['USDC','USDT'].includes(cCode)) usd=cAmt;
+            if(ts>=cutoff24) vol24+=usd;
+            if(ts>=cutoff7d) vol7d+=usd;
+          }
+          const next=d?._links?.next?.href;
+          if(!next||stop)break;
+          url=next; pages++;
+          await new Promise(r=>setTimeout(r,60));
+        }
+        pool.vol24=vol24; pool.vol7d=vol7d;
+        // Store 5min snapshot for anomaly detection
+        pool.vol5min=0;
       }catch(e){}
     }));
-    await new Promise(r=>setTimeout(r,50));
+    await new Promise(r=>setTimeout(r,100));
   }
+}
+
+// 5min volume check for anomaly detection
+async function fetch5minVolume(pool){
+  try{
+    const cutoff5m = new Date(Date.now()-300000).toISOString();
+    const r = await fetch(`${H}/liquidity_pools/${pool.id}/trades?limit=50&order=desc`);
+    if(!r.ok) return 0;
+    const d = await r.json();
+    const trades = d?._embedded?.records||[];
+    let vol=0;
+    for(const t of trades){
+      const ts = t.ledger_close_time||'';
+      if(ts && ts < cutoff5m) break;
+      const bAmt=parseFloat(t.base_amount||0);
+      const bCode=t.base_asset_type==='native'?'XLM':(t.base_asset_code||'');
+      const cAmt=parseFloat(t.counter_amount||0);
+      const cCode=t.counter_asset_type==='native'?'XLM':(t.counter_asset_code||'');
+      let usd=0;
+      if(bCode==='XLM')usd=bAmt*XLM;
+      else if(['USDC','USDT'].includes(bCode))usd=bAmt;
+      else if(cCode==='XLM')usd=cAmt*XLM;
+      else if(['USDC','USDT'].includes(cCode))usd=cAmt;
+      vol+=usd;
+    }
+    return vol;
+  }catch(e){return 0;}
+}
+
+// Anomaly detection: 5min volume >= pool TVL
+function checkAnomalies(pools){
+  pools.forEach(async p=>{
+    if(p.tvl<=0)return;
+    const v5=await fetch5minVolume(p);
+    p.vol5min=v5;
+    if(v5>=p.tvl*0.5){ // 50% of TVL in 5 min = anomaly
+      p.anomaly=true;
+      console.warn('ANOMALY POOL:', p.pair, 'vol5min:', v5, 'tvl:', p.tvl);
+      // Re-render to show anomaly badge
+      applyFilters();
+    }
+  });
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────
@@ -330,8 +386,10 @@ function applyFilters(){
   });
 
   // Sort
+  const getApr=p=>p.tvl>0?(p.vol24*365*p.fee/100/p.tvl*100):0;
   if(sortBy==='volume') filteredPools.sort((a,b)=>b.vol24-a.vol24);
   else if(sortBy==='tvl') filteredPools.sort((a,b)=>b.tvl-a.tvl);
+  else if(sortBy==='apr') filteredPools.sort((a,b)=>getApr(b)-getApr(a));
   else if(sortBy==='fee') filteredPools.sort((a,b)=>b.fee-a.fee);
 
   renderPage(0);
@@ -359,7 +417,7 @@ function renderPage(page){
     return`<div class="pool-row" style="animation-delay:${Math.min(i,10)*20}ms" onclick="showDetail('${p.id}')">
       <div class="rank">${rank}</div>
       <div>
-        <div class="pair-name">${p.pair}</div>
+        <div class="pair-name">${p.pair}${p.anomaly?'<span style="margin-left:8px;font-family:var(--mono);font-size:9px;padding:2px 6px;background:rgba(255,61,90,.15);color:var(--red);border-radius:2px">⚡ SPIKE</span>':''}</div>
         <div class="pair-id">${p.id.slice(0,16)}...</div>
       </div>
       <div class="pool-val cyan" style="text-align:right">${fU(p.tvl)}</div>
@@ -399,6 +457,7 @@ function showDetail(poolId){
       <span>${p.pair}</span>
       <span class="fee-badge">${p.fee.toFixed(2)}% fee</span>
       <div style="margin-left:auto;display:flex;gap:8px">
+        <a class="ext-link" href="https://stellarmonitor.xyz/pools" >Pools ↗</a>
         <a class="ext-link" href="https://stellar.expert/explorer/public/liquidity-pool/${p.id}" target="_blank">stellar.expert ↗</a>
         <span class="pd-close" onclick="$('pool-detail').style.display='none'">✕ Close</span>
       </div>
