@@ -215,21 +215,10 @@ async function fetchPools(){
     try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');const d=await r.json();XLM=parseFloat(d?.stellar?.usd)||XLM;}catch(e){}
 
     // Fetch from both sources in parallel
-    const [horizonPools, aquaPools] = await Promise.all([
-      fetchHorizonPools(),
-      fetchAquaPools(),
-    ]);
-
-    // Merge — AQUA pools first (more data), then Horizon pools not in AQUA
-    const aquaIds = new Set(aquaPools.map(p=>p.id));
-    const horizonOnly = horizonPools.filter(p=>!aquaIds.has(p.id));
-    allPools = [...aquaPools, ...horizonOnly].filter(p=>p.tvl>0||p.vol24>0);
-
-    // Sort by TVL by default
+    // Stellar Expert has all pools with volume data
+    const horizonPools = await fetchHorizonPools();
+    allPools = horizonPools.filter(p=>p.tvl>0||p.vol24>0);
     allPools.sort((a,b)=>b.tvl-a.tvl);
-
-    // Fetch volumes for horizon-only pools
-    if(horizonOnly.length>0) await fetchVolumes(horizonOnly.slice(0,30));
 
     checkAnomalies(allPools);
     updateStats();
@@ -242,72 +231,80 @@ async function fetchPools(){
 }
 
 async function fetchHorizonPools(){
-  let pools=[], url=`${H}/liquidity_pools?limit=200&order=desc`, pages=0;
-  while(pages<5){
+  // Use Stellar Expert API - has ALL pools including AQUA with volume data
+  const SEXP = 'https://api.stellar.expert/explorer/public';
+  let pools=[], cursor=0, pages=0;
+  while(pages<15){
     try{
+      const url=`${SEXP}/liquidity-pool?limit=200&order=desc&sort=volume&cursor=${cursor}`;
       const r=await fetch(url); if(!r.ok)break;
       const d=await r.json();
       const batch=d?._embedded?.records||[];
       if(!batch.length)break;
       pools.push(...batch); pages++;
-      const next=d?._links?.next?.href; if(!next)break;
-      url=next;
+      // Get cursor for next page
+      const nextHref=d?._links?.next?.href||'';
+      const m=nextHref.match(/cursor=(\d+)/);
+      if(!m)break;
+      cursor=parseInt(m[1]);
       await new Promise(r=>setTimeout(r,80));
     }catch(e){break;}
   }
-  return pools.map(p=>enrichPool(p));
+  return pools.map(p=>enrichStellarExpertPool(p));
 }
 
-async function fetchAquaPools(){
-  try{
-    // AQUA AMM API
-    let pools=[], page=1;
-    while(page<=10){
-      const r=await fetch(`https://amm-api.aqua.network/api/v1/pools/?limit=200&page=${page}&sort=-total_liquidity_xlm`);
-      if(!r.ok) break;
-      const d=await r.json();
-      const results=d.results||d.pools||[];
-      if(!results.length) break;
-      pools.push(...results);
-      if(!d.next) break;
-      page++;
-      await new Promise(r=>setTimeout(r,80));
-    }
-    return pools.map(p=>enrichAquaPool(p));
-  }catch(e){
-    console.warn('AQUA API error:', e);
-    return [];
-  }
-}
-
-function enrichAquaPool(p){
-  // AQUA pool format
-  const tokens = p.tokens_str||p.pool_id_str||'';
-  const reserves = p.reserves||[];
-  const assetA = p.token_a_code||tokens.split('-')[0]||'?';
-  const assetB = p.token_b_code||tokens.split('-')[1]||'?';
-  const amtA = parseFloat(p.token_a_amount||p.reserve_a||0);
-  const amtB = parseFloat(p.token_b_amount||p.reserve_b||0);
-  const tvl = parseFloat(p.total_liquidity||p.tvl_usd||0) || 
-    (assetA==='XLM'?amtA*XLM:(['USDC','USDT'].includes(assetA)?amtA:0)) +
-    (assetB==='XLM'?amtB*XLM:(['USDC','USDT'].includes(assetB)?amtB:0));
+function enrichStellarExpertPool(p){
+  const assets=p.assets||[];
+  const a0=assets[0]||{}, a1=assets[1]||{};
   
-  const vol24 = parseFloat(p.volume_24h||p.daily_volume||0);
-  const vol7d  = parseFloat(p.volume_7d||p.weekly_volume||0);
-  const fee    = parseFloat(p.fee||p.swap_fee||30)/100;
+  // Parse asset names
+  const getCode=a=>{
+    if(a.asset==='XLM'||a.name==='XLM')return 'XLM';
+    return (a.asset||a.name||'?').split('-')[0];
+  };
+  const assetA=getCode(a0), assetB=getCode(a1);
+  
+  // Amounts are in stroops (1/10000000)
+  const amtA=parseFloat(a0.amount||0)/10000000;
+  const amtB=parseFloat(a1.amount||0)/10000000;
+  
+  // TVL in USD
+  const usdA=assetA==='XLM'?amtA*XLM:(['USDC','USDT'].includes(assetA)?amtA:0);
+  const usdB=assetB==='XLM'?amtB*XLM:(['USDC','USDT'].includes(assetB)?amtB:0);
+  const tvl=(usdA+usdB)||Math.max(usdA,usdB)*2;
+  
+  // Volume from stellar expert (in XLM, convert to USD)
+  const trades=p.trades||{};
+  const volume=p.volume||{};
+  const vol24_xlm=parseFloat(volume['1d']||trades['1d']||0)/10000000;
+  const vol7d_xlm=parseFloat(volume['7d']||trades['7d']||0)/10000000;
+  const vol24=vol24_xlm*XLM;
+  const vol7d=vol7d_xlm*XLM;
+  
+  const fee=(p.fee||30)/100/100; // fee_bp to percent
+  
+  // Detect source
+  const domains=[a0.domain||'',a1.domain||''];
+  const source=domains.some(d=>d.includes('aqua'))?'AQUA':
+                domains.some(d=>d.includes('ultrastellar')||d.includes('lobstr'))?'LOBSTR':'';
 
   return {
-    id: p.pool_id||p.id||Math.random().toString(36).slice(2),
-    pair: `${assetA}/${assetB}`,
-    assetA, assetB, amtA, amtB,
-    tvl, fee: fee||0.3,
-    totalShares: parseFloat(p.total_shares||0),
-    tradeCount: parseInt(p.trade_count||p.total_trades||0),
-    vol24, vol7d, vol5min:0,
-    source: 'AQUA',
-    aquaLink: `https://aqua.network/pools/${p.pool_id||p.id}/`,
+    id:p.id,
+    pair:`${assetA}/${assetB}`,
+    assetA,assetB,amtA,amtB,tvl,
+    fee:fee||0.3,
+    totalShares:parseFloat(p.shares||0)/10000000,
+    tradeCount:parseInt((trades['1d']||0)+(trades['7d']||0)),
+    vol24,vol7d,vol5min:0,
+    source,
+    accounts:p.accounts||0,
+    aquaLink:source==='AQUA'?`https://aqua.network/pools/`:null,
+    expertLink:`https://stellar.expert/explorer/public/liquidity-pool/${p.id}`,
   };
 }
+
+// Keep for compatibility
+async function fetchAquaPools(){ return []; }
 
 function enrichPool(p){
   const reserves = p.reserves||[];
@@ -522,9 +519,9 @@ function showDetail(poolId){
       <span>${p.pair}</span>
       <span class="fee-badge">${p.fee.toFixed(2)}% fee</span>
       <div style="margin-left:auto;display:flex;gap:8px">
-        ${p.aquaLink?`<a class="ext-link" href="${p.aquaLink}" target="_blank">AQUA Pool ↗</a>`:''}
-        <a class="ext-link" href="https://stellarterm.com/" target="_blank">Add Liquidity ↗</a>
-        <a class="ext-link" href="https://stellar.expert/explorer/public/liquidity-pool/${p.id}" target="_blank">stellar.expert ↗</a>
+        ${p.aquaLink?`<a class="ext-link" href="${p.aquaLink}" target="_blank">AQUA ↗</a>`:''}
+        <a class="ext-link" href="https://stellarterm.com/amm/" target="_blank">Add Liquidity ↗</a>
+        <a class="ext-link" href="${p.expertLink||'https://stellar.expert/explorer/public/liquidity-pool/'+p.id}" target="_blank">stellar.expert ↗</a>
         <span class="pd-close" onclick="$('pool-detail').style.display='none'">✕ Close</span>
       </div>
     </div>
