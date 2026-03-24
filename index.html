@@ -402,18 +402,17 @@ async function fetchPrice(){
 
 async function fetchFromAPI(){
   try{
-    const r=await fetch('https://api.stellarmonitor.xyz/api/alerts?limit=500');
+    const r=await fetch('https://api.stellarmonitor.xyz/api/alerts?limit=10000');
     if(!r.ok) return;
     const d=await r.json();
     const alerts=d.alerts||[];
     if(!alerts.length) return;
-    let cnt=alerts.length, usdc=0, big=0;
-    alerts.forEach(a=>{
-      if((a.asset==='USDC'||a.selling==='USDC')&&a.amount) usdc+=a.amount;
-      if((a.usd_value||0)>big) big=a.usd_value||0;
-    });
+    const cutoff=Date.now()-86400000;
+    const today=alerts.filter(a=>new Date((a.created_at||'').replace(' ','T')+'Z').getTime()>cutoff);
+    let cnt=today.length, usdc=0, big=0;
+    today.forEach(a=>{const usd=a.usd_value||0;usdc+=usd;if(usd>big)big=usd;});
     animNum($('s-alerts'),cnt,v=>v);
-    animNum($('s-usdc'),usdc,fN);
+    animNum($('s-usdc'),usdc,fU);
     animNum($('s-biggest'),big,fU);
     $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
     feedItems=alerts.slice(0,8).map(a=>{
@@ -431,7 +430,6 @@ async function fetchOps(){
     if(!r.ok)return;
     const d=await r.json();
     const ops=d?._embedded?.records||[];
-    let cnt=0,usdc=0,big=0;
     const items=[],seen=new Set();
     ops.forEach(op=>{
       if(op.type!=='payment')return;
@@ -440,17 +438,10 @@ async function fetchOps(){
       const amt=parseFloat(op.amount||0);
       const code=op.asset_type==='native'?'XLM':(op.asset_code||'?');
       const usd=code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
-      if(code==='USDC'||code==='USDT')usdc+=amt;
-      cnt++;if(usd>big)big=usd;
       if(amt>0.01)items.push({code,amt,usd,from:op.from,to:op.to,ts:op.created_at,hash});
     });
     items.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
     feedItems=[...items.slice(0,8),...feedItems].slice(0,12);
-    alertCount=cnt;usdcVol=usdc;biggest=big;
-    animNum($('s-alerts'),cnt,v=>v);
-    animNum($('s-usdc'),usdc,fN);
-    animNum($('s-biggest'),big,fU);
-    $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
     renderTxFeed();
   }catch(e){}
 }
