@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzAyMDQwYSIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGM4ZmYiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiLz48dGV4dCB4PSIxNiIgeT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIxNyIgZmlsbD0iIzAwYzhmZiI+UzwvdGV4dD48L3N2Zz4=">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StellarMonitor — Liquidity Pools</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05080d;--dark:#090e16;--panel:#0c1220;--panel2:#0f1628;--edge:rgba(255,255,255,0.07);--edge2:rgba(255,255,255,0.03);--cyan:#00c8ff;--green:#00e87a;--orange:#ff8c00;--red:#ff3d5a;--white:#f0f4fa;--gray1:#8da0b8;--gray2:#4a6380;--mono:'DM Mono',monospace;--sans:'Outfit',sans-serif;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(5,8,13,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--white);font-weight:700;font-size:15px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-center{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:4px}
+.nav-link{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray1);text-decoration:none;padding:7px 16px;border-radius:3px;transition:all .15s;border:1px solid transparent}
+.nav-link:hover{color:var(--white);background:rgba(255,255,255,.05);border-color:var(--edge)}
+.nav-link.active{color:var(--cyan);border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.06)}
+.nav-cta{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 18px;border:1px solid var(--cyan);color:var(--cyan);border-radius:3px;text-decoration:none;transition:all .15s}
+.nav-cta:hover{background:var(--cyan);color:var(--bg)}
+.page{max-width:1200px;margin:0 auto;padding:88px 40px 40px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.page-sub{font-family:var(--mono);font-size:11px;color:var(--gray2);margin-top:4px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-box{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:16px 20px}
+.sb-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px}
+.sb-val{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--white);overflow:hidden;height:26px;display:flex;align-items:center}
+.sb-val.cyan{color:var(--cyan)}.sb-val.green{color:var(--green)}
+
+/* FILTER */
+.filter-bar{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:14px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.fb-group{display:flex;flex-direction:column;gap:5px}
+.fb-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2)}
+.fb-input{background:var(--dark);border:1px solid var(--edge);border-radius:3px;padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--white);outline:none;transition:border-color .15s}
+.fb-input:focus{border-color:var(--cyan)}
+.fb-input::placeholder{color:var(--gray2)}
+.fb-chips{display:flex;gap:4px}
+.chip{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;border:1px solid var(--edge);color:var(--gray2);border-radius:2px;cursor:pointer;transition:all .15s;background:transparent}
+.chip:hover,.chip.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06)}
+.fb-btn{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;background:var(--cyan);color:var(--bg);border:none;border-radius:3px;cursor:pointer;transition:all .15s}
+.fb-btn:hover{background:#33d6ff}
+
+/* TABLE */
+.pools-table{background:var(--panel);border:1px solid var(--edge);border-radius:4px;overflow:hidden}
+.pools-hdr{display:grid;grid-template-columns:40px 1fr 120px 120px 120px 100px 110px;padding:10px 20px;background:var(--panel2);border-bottom:1px solid var(--edge);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2)}
+.pool-row{display:grid;grid-template-columns:40px 1fr 120px 120px 120px 100px 110px;padding:14px 20px;border-bottom:1px solid var(--edge2);cursor:pointer;transition:background .1s;animation:row-in .2s ease forwards;opacity:0}
+.pool-row:hover{background:rgba(0,200,255,.03)}
+.pool-row:last-child{border-bottom:none}
+@keyframes row-in{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+.rank{font-family:var(--mono);font-size:12px;color:var(--gray2)}
+.pair-name{font-size:14px;font-weight:600;color:var(--white)}
+.pair-id{font-family:var(--mono);font-size:9px;color:var(--gray2);margin-top:2px}
+.pool-val{font-family:var(--mono);font-size:12px;color:var(--white);text-align:right}
+.pool-val.green{color:var(--green)}
+.pool-val.cyan{color:var(--cyan)}
+.pool-val.orange{color:var(--orange)}
+.fee-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:2px;font-family:var(--mono);font-size:9px;background:rgba(0,200,255,.1);color:var(--cyan)}
+.vol-bar-wrap{display:flex;align-items:center;gap:8px}
+.vol-bar{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;max-width:80px}
+.vol-bar-fill{height:100%;border-radius:2px;background:var(--cyan);transition:width .5s ease}
+.loading-msg{padding:60px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)}
+.loading-spin{width:28px;height:28px;border:2px solid var(--edge);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-msg{padding:60px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--gray2)}
+
+/* POOL DETAIL */
+.pool-detail{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:20px;margin-bottom:16px;display:none}
+.pd-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.pd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.pd-box{background:var(--panel2);border:1px solid var(--edge);border-radius:3px;padding:12px 16px}
+.pd-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);margin-bottom:6px}
+.pd-val{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--white)}
+.pd-val.green{color:var(--green)}.pd-val.cyan{color:var(--cyan)}
+.pd-reserves{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pd-reserve{background:var(--panel2);border:1px solid var(--edge);border-radius:3px;padding:12px 16px}
+.pd-asset{font-size:14px;font-weight:600;margin-bottom:4px}
+.pd-amount{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+.pd-close{font-family:var(--mono);font-size:10px;color:var(--gray2);cursor:pointer;padding:4px 10px;border:1px solid var(--edge);border-radius:2px;transition:all .15s}
+.pd-close:hover{color:var(--white);border-color:rgba(255,255,255,.2)}
+.ext-link{font-family:var(--mono);font-size:10px;color:var(--cyan);text-decoration:none;padding:4px 10px;border:1px solid rgba(0,200,255,.3);border-radius:2px;transition:all .15s}
+.ext-link:hover{background:rgba(0,200,255,.06)}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--edge);background:var(--panel2)}
+.pg-info{font-family:var(--mono);font-size:10px;color:var(--gray2)}
+.pg-btns{display:flex;gap:6px}
+.pg-btn{font-family:var(--mono);font-size:10px;padding:5px 12px;border:1px solid var(--edge);background:transparent;color:var(--gray1);border-radius:2px;cursor:pointer;transition:all .15s}
+.pg-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}
+.pg-btn:disabled{opacity:.3;cursor:default}
+.pg-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06)}
+@media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr}.pools-hdr,.pool-row{grid-template-columns:40px 1fr 100px 100px 100px}.pools-hdr>div:nth-child(6),.pool-row>div:nth-child(6),.pools-hdr>div:nth-child(7),.pool-row>div:nth-child(7){display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo"><div class="logo-dot"></div>StellarMonitor</a>
+  <div class="nav-center">
+    <a href="/feed"    class="nav-link">Live Feed</a>
+    <a href="/scanner" class="nav-link">Scanner</a>
+    <a href="/graph"   class="nav-link">Graph</a>
+    <a href="/pools"   class="nav-link active">Pools</a>
+    <a href="/docs"    class="nav-link">Docs</a>
+  </div>
+  <a href="https://x.com/StellarMonitor" class="nav-cta" target="_blank">Follow ↗</a>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Liquidity Pools</div>
+      <div class="page-sub">Stellar AMM pools ranked by volume</div>
+    </div>
+    <div id="last-upd" style="font-family:var(--mono);font-size:10px;color:var(--gray2)">—</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="sb-label">Total Pools</div><div class="sb-val cyan" id="s-total">—</div></div>
+    <div class="stat-box"><div class="sb-label">Total TVL</div><div class="sb-val" id="s-tvl">—</div></div>
+    <div class="stat-box"><div class="sb-label">24h Volume</div><div class="sb-val green" id="s-vol24">—</div></div>
+    <div class="stat-box"><div class="sb-label">Avg Fee</div><div class="sb-val" id="s-fee">—</div></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <div class="fb-group">
+      <div class="fb-label">Search by pair or pool ID</div>
+      <input class="fb-input" id="f-search" placeholder="e.g. XLM, USDC, pool ID..." style="width:280px">
+    </div>
+    <div class="fb-group">
+      <div class="fb-label">Min volume period</div>
+      <div class="fb-chips">
+        <span class="chip on" data-period="1"  onclick="setPeriod(this)">24H</span>
+        <span class="chip"    data-period="7"  onclick="setPeriod(this)">7D</span>
+        <span class="chip"    data-period="30" onclick="setPeriod(this)">30D</span>
+      </div>
+    </div>
+    <div class="fb-group">
+      <div class="fb-label">Min volume USD</div>
+      <input class="fb-input" id="f-minvol" placeholder="0" style="width:120px" value="0">
+    </div>
+    <div class="fb-group">
+      <div class="fb-label">Sort by</div>
+      <div class="fb-chips">
+        <span class="chip on" data-sort="volume" onclick="setSort(this)">Volume</span>
+        <span class="chip"    data-sort="tvl"    onclick="setSort(this)">TVL</span>
+        <span class="chip"    data-sort="fee"    onclick="setSort(this)">Fee</span>
+      </div>
+    </div>
+    <button class="fb-btn" onclick="applyFilters()">Apply</button>
+  </div>
+
+  <!-- POOL DETAIL (shown on click) -->
+  <div class="pool-detail" id="pool-detail"></div>
+
+  <!-- TABLE -->
+  <div class="pools-table">
+    <div class="pools-hdr">
+      <div>#</div>
+      <div>Pair</div>
+      <div style="text-align:right">TVL</div>
+      <div style="text-align:right">24h Volume</div>
+      <div style="text-align:right">7d Volume</div>
+      <div style="text-align:right">Fee</div>
+      <div style="text-align:right">APR est.</div>
+    </div>
+    <div id="pools-body">
+      <div class="loading-msg"><div class="loading-spin"></div>Loading pools...</div>
+    </div>
+    <div class="pagination" id="pagination" style="display:none">
+      <div class="pg-info" id="pg-info"></div>
+      <div class="pg-btns" id="pg-btns"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const H = 'https://horizon.stellar.org';
+let XLM = 0.174;
+let allPools = [];
+let filteredPools = [];
+let currentPage = 0;
+const PAGE_SIZE = 50;
+let sortBy = 'volume';
+let periodDays = 1;
+
+const $ = id => document.getElementById(id);
+const fU = n => {if(!n||n<=0)return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toFixed(0)};
+const fN = n => {if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toFixed(2)};
+
+function setPeriod(el){
+  periodDays = parseInt(el.dataset.period);
+  document.querySelectorAll('[data-period]').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setSort(el){
+  sortBy = el.dataset.sort;
+  document.querySelectorAll('[data-sort]').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── Fetch pools from Horizon ───────────────────────────────────────────────
+async function fetchPools(){
+  $('pools-body').innerHTML='<div class="loading-msg"><div class="loading-spin"></div>Loading pools from Horizon...</div>';
+  
+  try{
+    // Fetch XLM price
+    try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');const d=await r.json();XLM=parseFloat(d?.stellar?.usd)||XLM;}catch(e){}
+
+    let pools = [];
+    let url = `${H}/liquidity_pools?limit=200&order=desc`;
+    let pages = 0;
+
+    // Fetch multiple pages
+    while(pages < 10){
+      const r = await fetch(url);
+      if(!r.ok) break;
+      const d = await r.json();
+      const batch = d?._embedded?.records||[];
+      if(!batch.length) break;
+      pools.push(...batch);
+      pages++;
+      const next = d?._links?.next?.href;
+      if(!next) break;
+      url = next;
+      await new Promise(r=>setTimeout(r,100));
+    }
+
+    // Enrich each pool
+    allPools = pools.map(p => enrichPool(p)).filter(p => p.tvl > 0);
+
+    // Fetch 7d volume for each pool (sample top 50)
+    await fetchVolumes(allPools.slice(0, 50));
+
+    updateStats();
+    applyFilters();
+    $('last-upd').textContent = 'Updated '+new Date().toLocaleTimeString('en',{hour12:false});
+
+  }catch(e){
+    $('pools-body').innerHTML = `<div class="empty-msg">Error loading pools: ${e.message}</div>`;
+  }
+}
+
+function enrichPool(p){
+  const reserves = p.reserves||[];
+  const assetA = reserves[0]?.asset==='native'?'XLM':reserves[0]?.asset?.split(':')[0]||'?';
+  const assetB = reserves[1]?.asset==='native'?'XLM':reserves[1]?.asset?.split(':')[0]||'?';
+  const amtA = parseFloat(reserves[0]?.amount||0);
+  const amtB = parseFloat(reserves[1]?.amount||0);
+  
+  // Calculate TVL
+  const usdA = assetA==='XLM'?amtA*XLM:(['USDC','USDT'].includes(assetA)?amtA:0);
+  const usdB = assetB==='XLM'?amtB*XLM:(['USDC','USDT'].includes(assetB)?amtB:0);
+  const tvl = (usdA+usdB)||Math.max(usdA,usdB)*2;
+  
+  const fee = (p.fee_bp||30)/100; // basis points to percent
+  
+  return {
+    id: p.id,
+    pair: `${assetA}/${assetB}`,
+    assetA, assetB, amtA, amtB,
+    tvl, fee,
+    totalShares: parseFloat(p.total_shares||0),
+    tradeCount: parseInt(p.trade_count||0),
+    vol24: 0, vol7d: 0, // filled later
+    reserves: p.reserves||[],
+    raw: p,
+  };
+}
+
+// Estimate volume from trade history
+async function fetchVolumes(pools){
+  const cutoff24 = new Date(Date.now()-86400000).toISOString();
+  const cutoff7d  = new Date(Date.now()-7*86400000).toISOString();
+
+  // Fetch trades for top pools in parallel (batches of 5)
+  for(let i=0;i<Math.min(pools.length,30);i+=5){
+    const batch = pools.slice(i,i+5);
+    await Promise.all(batch.map(async pool => {
+      try{
+        const r = await fetch(`${H}/liquidity_pools/${pool.id}/trades?limit=200&order=desc`);
+        if(!r.ok) return;
+        const d = await r.json();
+        const trades = d?._embedded?.records||[];
+        let vol24=0, vol7d=0;
+        trades.forEach(t=>{
+          const ts = t.ledger_close_time||t.created_at||'';
+          const baseAmt = parseFloat(t.base_amount||0);
+          const counterAmt = parseFloat(t.counter_amount||0);
+          const baseAsset = t.base_asset_type==='native'?'XLM':(t.base_asset_code||'');
+          const usd = baseAsset==='XLM'?baseAmt*XLM:(['USDC','USDT'].includes(baseAsset)?baseAmt:counterAmt*XLM);
+          if(ts>=cutoff24) vol24+=usd;
+          if(ts>=cutoff7d) vol7d+=usd;
+        });
+        pool.vol24 = vol24;
+        pool.vol7d = vol7d;
+      }catch(e){}
+    }));
+    await new Promise(r=>setTimeout(r,50));
+  }
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+function updateStats(){
+  const totalTVL = allPools.reduce((s,p)=>s+p.tvl,0);
+  const totalVol = allPools.reduce((s,p)=>s+p.vol24,0);
+  const avgFee   = allPools.length ? allPools.reduce((s,p)=>s+p.fee,0)/allPools.length : 0;
+  $('s-total').textContent  = allPools.length;
+  $('s-tvl').textContent    = fU(totalTVL);
+  $('s-vol24').textContent  = fU(totalVol)||'Loading...';
+  $('s-fee').textContent    = avgFee.toFixed(2)+'%';
+}
+
+// ── Filters & render ───────────────────────────────────────────────────────
+function applyFilters(){
+  const search = ($('f-search').value||'').toLowerCase().trim();
+  const minVol = parseFloat($('f-minvol').value)||0;
+
+  filteredPools = allPools.filter(p=>{
+    if(search && !p.pair.toLowerCase().includes(search) && !p.id.toLowerCase().includes(search)) return false;
+    const vol = periodDays<=1?p.vol24:periodDays<=7?p.vol7d:p.vol7d*4;
+    if(vol < minVol) return false;
+    return true;
+  });
+
+  // Sort
+  if(sortBy==='volume') filteredPools.sort((a,b)=>b.vol24-a.vol24);
+  else if(sortBy==='tvl') filteredPools.sort((a,b)=>b.tvl-a.tvl);
+  else if(sortBy==='fee') filteredPools.sort((a,b)=>b.fee-a.fee);
+
+  renderPage(0);
+}
+
+function renderPage(page){
+  currentPage = page;
+  const total = filteredPools.length;
+  const start = page*PAGE_SIZE;
+  const end   = Math.min(start+PAGE_SIZE, total);
+  const slice = filteredPools.slice(start, end);
+  const maxVol = Math.max(...filteredPools.slice(0,50).map(p=>p.vol24), 1);
+
+  if(!slice.length){
+    $('pools-body').innerHTML = '<div class="empty-msg">No pools match your filters</div>';
+    $('pagination').style.display='none';
+    return;
+  }
+
+  $('pools-body').innerHTML = slice.map((p,i)=>{
+    const rank = start+i+1;
+    const apr  = p.tvl>0 ? (p.vol24*365*p.fee/100/p.tvl*100).toFixed(1) : '—';
+    const aprColor = parseFloat(apr)>20?'green':parseFloat(apr)>5?'orange':'';
+    const volPct = (p.vol24/maxVol*100).toFixed(1);
+    return`<div class="pool-row" style="animation-delay:${Math.min(i,10)*20}ms" onclick="showDetail('${p.id}')">
+      <div class="rank">${rank}</div>
+      <div>
+        <div class="pair-name">${p.pair}</div>
+        <div class="pair-id">${p.id.slice(0,16)}...</div>
+      </div>
+      <div class="pool-val cyan" style="text-align:right">${fU(p.tvl)}</div>
+      <div style="text-align:right">
+        <div class="pool-val">${fU(p.vol24)}</div>
+        <div class="vol-bar-wrap" style="justify-content:flex-end;margin-top:4px">
+          <div class="vol-bar"><div class="vol-bar-fill" style="width:${volPct}%"></div></div>
+        </div>
+      </div>
+      <div class="pool-val" style="text-align:right">${fU(p.vol7d)}</div>
+      <div class="pool-val" style="text-align:right"><span class="fee-badge">${p.fee.toFixed(2)}%</span></div>
+      <div class="pool-val ${aprColor}" style="text-align:right">${apr==='—'?'—':apr+'%'}</div>
+    </div>`;
+  }).join('');
+
+  // Pagination
+  const totalPages = Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(total<=PAGE_SIZE){$('pagination').style.display='none';return;}
+  $('pagination').style.display='flex';
+  $('pg-info').textContent=`${start+1}–${end} of ${total} pools`;
+  let btns=`<button class="pg-btn" onclick="renderPage(${page-1})" ${page===0?'disabled':''}>← Prev</button>`;
+  const s=Math.max(0,Math.min(page-3,totalPages-7)),e=Math.min(totalPages,s+7);
+  for(let pp=s;pp<e;pp++)btns+=`<button class="pg-btn${pp===page?' active':''}" onclick="renderPage(${pp})">${pp+1}</button>`;
+  btns+=`<button class="pg-btn" onclick="renderPage(${page+1})" ${page>=totalPages-1?'disabled':''}>Next →</button>`;
+  $('pg-btns').innerHTML=btns;
+}
+
+// ── Pool detail panel ──────────────────────────────────────────────────────
+function showDetail(poolId){
+  const p = allPools.find(x=>x.id===poolId);
+  if(!p) return;
+  const apr = p.tvl>0?(p.vol24*365*p.fee/100/p.tvl*100).toFixed(2):'N/A';
+  const panel = $('pool-detail');
+  panel.style.display='block';
+  panel.innerHTML=`
+    <div class="pd-title">
+      <span>${p.pair}</span>
+      <span class="fee-badge">${p.fee.toFixed(2)}% fee</span>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <a class="ext-link" href="https://stellar.expert/explorer/public/liquidity-pool/${p.id}" target="_blank">stellar.expert ↗</a>
+        <span class="pd-close" onclick="$('pool-detail').style.display='none'">✕ Close</span>
+      </div>
+    </div>
+    <div class="pd-grid">
+      <div class="pd-box"><div class="pd-label">TVL</div><div class="pd-val cyan">${fU(p.tvl)}</div></div>
+      <div class="pd-box"><div class="pd-label">24h Volume</div><div class="pd-val">${fU(p.vol24)||'N/A'}</div></div>
+      <div class="pd-box"><div class="pd-label">7d Volume</div><div class="pd-val">${fU(p.vol7d)||'N/A'}</div></div>
+      <div class="pd-box"><div class="pd-label">Est. APR</div><div class="pd-val green">${apr}%</div></div>
+    </div>
+    <div class="pd-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="pd-box"><div class="pd-label">Total Shares</div><div class="pd-val" style="font-size:13px">${fN(p.totalShares)}</div></div>
+      <div class="pd-box"><div class="pd-label">Trade Count</div><div class="pd-val" style="font-size:13px">${p.tradeCount.toLocaleString()}</div></div>
+      <div class="pd-box"><div class="pd-label">Pool ID</div><div class="pd-val" style="font-size:10px;word-break:break-all">${p.id}</div></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px">Reserves</div>
+    <div class="pd-reserves">
+      <div class="pd-reserve">
+        <div class="pd-asset">${p.assetA}</div>
+        <div class="pd-amount">${fN(p.amtA)} <span style="color:var(--gray2)">(${fU(p.assetA==='XLM'?p.amtA*XLM:(['USDC','USDT'].includes(p.assetA)?p.amtA:0))})</span></div>
+      </div>
+      <div class="pd-reserve">
+        <div class="pd-asset">${p.assetB}</div>
+        <div class="pd-amount">${fN(p.amtB)} <span style="color:var(--gray2)">(${fU(p.assetB==='XLM'?p.amtB*XLM:(['USDC','USDT'].includes(p.assetB)?p.amtB:0))})</span></div>
+      </div>
+    </div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// Search on Enter
+$('f-search').addEventListener('keydown',e=>{if(e.key==='Enter')applyFilters();});
+
+// Init
+fetchPools();
+// Refresh every 5 minutes
+setInterval(fetchPools, 300000);
+</script>
+</body>
+</html>
