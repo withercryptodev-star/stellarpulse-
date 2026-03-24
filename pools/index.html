@@ -262,11 +262,10 @@ function enrichStellarExpertPool(p){
   const amtB=parseFloat(a1.amount||0)/10000000;
   // Use ready-made USD values from Stellar Expert
   const tvl=parseFloat(p.total_value_locked||0)/10000000;
-  // volume_value is [{1d,7d},{1d,7d}] in USD stroops
-  const volVal=Array.isArray(p.volume_value)?p.volume_value:[];
-  const vv0=volVal[0]||{},vv1=volVal[1]||{};
-  const vol24=(parseFloat(vv0['1d']||0)+parseFloat(vv1['1d']||0))/10000000/2;
-  const vol7d=(parseFloat(vv0['7d']||0)+parseFloat(vv1['7d']||0))/10000000/2;
+  // volume_value is {1d, 7d} in USD stroops
+  const volVal=p.volume_value||{};
+  const vol24=parseFloat(volVal['1d']||0)/10000000;
+  const vol7d=parseFloat(volVal['7d']||0)/10000000;
   const fee=(p.fee||30)/100;
   const trades=p.trades||{};
   const domains=[a0.domain||'',a1.domain||''];
