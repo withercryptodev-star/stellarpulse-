@@ -276,13 +276,13 @@ function enrichStellarExpertPool(p){
   const issuers=[a0.asset||'',a1.asset||''];
   const isAqua=domains.some(d=>d.includes('aqua.network'))||
     assetCodes.some(c=>c==='AQUA')||
-    issuers.some(i=>i.startsWith('GARQ7O5JPBD2DDVE'));
+    issuers.some(i=>i.includes('GARQ7O5JPBD2DDVE'));
   const source=isAqua?'AQUA':domains.some(d=>d.includes('ultrastellar')||d.includes('lobstr'))?'LOBSTR':'';
   return{id:p.id,pair:`${assetA}/${assetB}`,assetA,assetB,amtA,amtB,tvl,fee,
     totalShares:parseFloat(p.shares||0)/10000000,
     tradeCount:parseInt(trades['1d']||0)+parseInt(trades['7d']||0),
     vol24,vol7d,vol5min:0,source,accounts:p.accounts||0,
-    aquaLink:isAqua?'https://aqua.network/pools/':null,
+    aquaLink:isAqua?`https://aqua.network/pools/${p.id}/`:null,
     expertLink:`https://stellar.expert/explorer/public/liquidity-pool/${p.id}`};
 }
 
