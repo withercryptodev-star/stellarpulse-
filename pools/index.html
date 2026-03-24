@@ -224,9 +224,11 @@ async function fetchPools(){
     updateStats();
     applyFilters();
     $('last-upd').textContent = 'Updated '+new Date().toLocaleTimeString('en',{hour12:false})+' ('+allPools.length+' pools)';
+    if(applyBtn) applyBtn.disabled=false;
 
   }catch(e){
     $('pools-body').innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`;
+    if(applyBtn) applyBtn.disabled=false;
   }
 }
 
