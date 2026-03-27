@@ -241,7 +241,7 @@ async function fetchHorizonPools(){
   let pools=[], cursor=0, pages=0;
   while(pages<15){
     try{
-      const url=`${SEXP}/liquidity-pool?limit=200&order=desc&sort=volume&cursor=${cursor}`;
+      const url=`${SEXP}/liquidity-pool?limit=200&order=desc&sort=overall_value&cursor=${cursor}`;
       const r=await fetch(url); if(!r.ok)break;
       const d=await r.json();
       const batch=d?._embedded?.records||[];
