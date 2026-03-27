@@ -225,7 +225,7 @@ async function fetchPools(){
     allPools = horizonPools.filter(p=>p.tvl>0||p.vol24>0);
     allPools.sort((a,b)=>b.tvl-a.tvl);
 
-    checkAnomalies(allPools);
+    // checkAnomalies disabled - causes too many Horizon requests
     updateStats();
     applyFilters();
     $('last-upd').textContent = 'Updated '+new Date().toLocaleTimeString('en',{hour12:false})+' ('+allPools.length+' pools)';
@@ -371,47 +371,9 @@ async function fetchVolumes(pools){
   }
 }
 
-// 5min volume check for anomaly detection
-async function fetch5minVolume(pool){
-  try{
-    const cutoff5m = new Date(Date.now()-300000).toISOString();
-    const r = await fetch(`${H}/liquidity_pools/${pool.id}/trades?limit=50&order=desc`);
-    if(!r.ok) return 0;
-    const d = await r.json();
-    const trades = d?._embedded?.records||[];
-    let vol=0;
-    for(const t of trades){
-      const ts = t.ledger_close_time||'';
-      if(ts && ts < cutoff5m) break;
-      const bAmt=parseFloat(t.base_amount||0);
-      const bCode=t.base_asset_type==='native'?'XLM':(t.base_asset_code||'');
-      const cAmt=parseFloat(t.counter_amount||0);
-      const cCode=t.counter_asset_type==='native'?'XLM':(t.counter_asset_code||'');
-      let usd=0;
-      if(bCode==='XLM')usd=bAmt*XLM;
-      else if(['USDC','USDT'].includes(bCode))usd=bAmt;
-      else if(cCode==='XLM')usd=cAmt*XLM;
-      else if(['USDC','USDT'].includes(cCode))usd=cAmt;
-      vol+=usd;
-    }
-    return vol;
-  }catch(e){return 0;}
-}
+// anomaly check removed
 
-// Anomaly detection: 5min volume >= pool TVL
-function checkAnomalies(pools){
-  pools.forEach(async p=>{
-    if(p.tvl<=0)return;
-    const v5=await fetch5minVolume(p);
-    p.vol5min=v5;
-    if(v5>=p.tvl*0.5){ // 50% of TVL in 5 min = anomaly
-      p.anomaly=true;
-      console.warn('ANOMALY POOL:', p.pair, 'vol5min:', v5, 'tvl:', p.tvl);
-      // Re-render to show anomaly badge
-      applyFilters();
-    }
-  });
-}
+// anomaly detection removed
 
 // ── Stats ──────────────────────────────────────────────────────────────────
 function updateStats(){
