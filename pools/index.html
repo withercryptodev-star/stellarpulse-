@@ -222,7 +222,7 @@ async function fetchPools(){
     // Fetch from both sources in parallel
     // Stellar Expert has all pools with volume data
     const horizonPools = await fetchHorizonPools();
-    allPools = horizonPools.filter(p=>p.tvl>0||p.vol24>0);
+    allPools = horizonPools.filter(p=>p.tvl>=500&&p.tvl<1e9);
     allPools.sort((a,b)=>b.tvl-a.tvl);
 
     // checkAnomalies disabled - causes too many Horizon requests
