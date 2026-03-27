@@ -226,9 +226,9 @@ async function fetchPools(){
     allPools.sort((a,b)=>b.tvl-a.tvl);
 
     // checkAnomalies disabled - causes too many Horizon requests
+    isLoading=false;
     updateStats();
     applyFilters();
-    isLoading=false;
     $('last-upd').textContent = 'Updated '+new Date().toLocaleTimeString('en',{hour12:false})+' ('+allPools.length+' pools)';
 
   }catch(e){
