@@ -270,14 +270,10 @@ function enrichStellarExpertPool(p){
   const usdB=assetB==='XLM'?amtB*XLM:(['USDC','USDT'].includes(assetB)?amtB:0);
   const tvl=(usdA>0&&usdB>0)?(usdA+usdB):Math.max(usdA,usdB)*2;
   // volume is array [{1d,7d},{1d,7d}] one per asset
-  const volArr=Array.isArray(p.volume)?p.volume:[];
-  const v0=volArr[0]||{},v1=volArr[1]||{};
-  let vol24=0,vol7d=0;
-  if(assetA==='XLM'){vol24=(parseFloat(v0['1d']||0)/10000000)*XLM;vol7d=(parseFloat(v0['7d']||0)/10000000)*XLM;}
-  else if(assetB==='XLM'){vol24=(parseFloat(v1['1d']||0)/10000000)*XLM;vol7d=(parseFloat(v1['7d']||0)/10000000)*XLM;}
-  else if(['USDC','USDT'].includes(assetA)){vol24=parseFloat(v0['1d']||0)/10000000;vol7d=parseFloat(v0['7d']||0)/10000000;}
-  else if(['USDC','USDT'].includes(assetB)){vol24=parseFloat(v1['1d']||0)/10000000;vol7d=parseFloat(v1['7d']||0)/10000000;}
-  else{vol24=(parseFloat(v0['1d']||0)/10000000)*XLM;vol7d=(parseFloat(v0['7d']||0)/10000000)*XLM;}
+  // Use volume_value which is already in USD stroops
+  const vv=p.volume_value||{};
+  const vol24=parseFloat(vv['1d']||0)/10000000;
+  const vol7d=parseFloat(vv['7d']||0)/10000000;
   const fee=(p.fee||30)/100; // 30 basis points = 0.30%
   const trades=p.trades||{};
   const domains=[a0.domain||'',a1.domain||''];
