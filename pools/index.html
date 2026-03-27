@@ -239,19 +239,20 @@ async function fetchHorizonPools(){
   // Use Stellar Expert API - has ALL pools including AQUA with volume data
   const SEXP = 'https://api.stellar.expert/explorer/public';
   let pools=[], cursor=0, pages=0;
-  while(pages<15){
+  while(pages<5){
     try{
       const url=`${SEXP}/liquidity-pool?limit=200&order=desc&sort=overall_value&cursor=${cursor}`;
+      const statusEl=document.getElementById('load-status');
+      if(statusEl) statusEl.textContent=`Loading pools... (${pools.length} loaded)`;
       const r=await fetch(url); if(!r.ok)break;
       const d=await r.json();
       const batch=d?._embedded?.records||[];
       if(!batch.length)break;
       pools.push(...batch); pages++;
-      // Use paging_token from last record as cursor
       const last=batch[batch.length-1];
       if(!last||!last.paging_token)break;
       cursor=last.paging_token;
-      await new Promise(r=>setTimeout(r,80));
+      await new Promise(r=>setTimeout(r,50));
     }catch(e){break;}
   }
   return pools.map(p=>enrichStellarExpertPool(p));
