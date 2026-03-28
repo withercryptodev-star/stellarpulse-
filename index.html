@@ -153,7 +153,7 @@ h1 .accent{color:var(--cyan)}
   }));
 
   // Whales - slowly drift around
-  const WHALES = Array.from({length:7}, () => ({
+  const WHALES = Array.from({length:4}, () => ({
     r: Math.random()*.7+.15,
     a: Math.random()*Math.PI*2,
     va: (Math.random()-.5)*.0008, // drift speed
@@ -238,10 +238,12 @@ h1 .accent{color:var(--cyan)}
     WHALES.forEach(w=>{
       w.a += w.va; w.r = Math.max(.1, Math.min(.92, w.r+w.vr));
       if(w.alpha<=0&&w.labelAlpha<=0){
-        if(Math.random()<.003){
-          w.a=Math.random()*Math.PI*2; w.r=Math.random()*.75+.12;
-          w.va=(Math.random()-.5)*.0012; w.vr=(Math.random()-.5)*.0005;
-          w.decay=Math.random()*.005+.002;
+        if(Math.random()<.0008){
+          w.a=Math.random()*Math.PI*2;
+          w.r=Math.random()*.78+.1;
+          w.va=(Math.random()>.5?1:-1)*(Math.random()*.0015+.0003);
+          w.vr=(Math.random()>.5?1:-1)*(Math.random()*.0006+.0001);
+          w.decay=Math.random()*.004+.0015;
         }
       }
       const wx=cx+Math.cos(w.a)*w.r*R;
