@@ -96,6 +96,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
     <a href="/pools"   class="nav-link">Pools</a>
     <a href="/docs"    class="nav-link">Docs</a>
   </div>
+  <a href="https://t.me/stellarmonitor" class="nav-cta" style="border-color:rgba(0,200,255,.5);background:rgba(0,200,255,.08);margin-right:8px" target="_blank">Telegram ↗</a>
   <a href="https://x.com/StellarMonitor" class="nav-cta" target="_blank">Follow ↗</a>
 </nav>
 
@@ -106,7 +107,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
   </div>
 
   <div class="stats-row">
-    <div class="stat-box"><div class="sb-label">XLM Price</div><div class="sb-val cyan" id="m-price">—</div></div>
+    <div class="stat-box"><div class="sb-label">XLM Price</div><div class="sb-val cyan" id="m-price">—</div><span id="m-price-change" style="font-family:var(--mono);font-size:10px;margin-top:2px;font-weight:500"></span></div>
     <div class="stat-box"><div class="sb-label">Transactions</div><div class="sb-val" id="m-alerts">—</div></div>
     <div class="stat-box"><div class="sb-label">Total Volume</div><div class="sb-val green" id="m-usdc">—</div></div>
     <div class="stat-box"><div class="sb-label">Biggest tx</div><div class="sb-val" id="m-biggest">—</div></div>
@@ -212,7 +213,7 @@ function opToItem(op){
   const code = op.asset_type==='native'?'XLM':(op.asset_code||'?');
   const amt  = parseFloat(op.amount||0);
   const usd  = code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);
-  const disp = amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
+  const disp = amt<0.01&&usd>0?fU(usd):(amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:Math.round(amt)+' '+code);
   const from = op.from||'';
   const to   = op.to||'';
   const tp   = code==='USDC'||code==='USDT'?'WHALE':code==='XLM'?'XLM':'OTHER';
@@ -229,7 +230,7 @@ function alertToItem(a){
   const code = a.asset||a.selling||a.pair?.split('/')[0]||'XLM';
   const usd  = a.usd_value||0;
   const amt  = a.amount||a.total_usd||0;
-  const disp = amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:amt.toFixed(2)+' '+code;
+  const disp = amt<0.01&&usd>0?fU(usd):(amt>=1e6?(amt/1e6).toFixed(2)+'M '+code:amt>=1000?(amt/1e3).toFixed(0)+'K '+code:Math.round(amt)+' '+code);
   const from = a.from_full||a.sender||'';
   const to   = a.to_full||'';
   const sub  = from?`${from.slice(0,6)}...${from.slice(-4)} → ${to?(to.slice(0,6)+'...'+to.slice(-4)):'?'}`:(a.pair||'');
@@ -458,7 +459,15 @@ function renderPage(page, feed){
 function goPage(p){ renderPage(p, allFeed); window.scrollTo(0,0); }
 
 async function fetchPrice(){
-  try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');const d=await r.json();XLM=parseFloat(d?.stellar?.usd)||XLM;animNum($('m-price'),XLM,v=>'$'+v.toFixed(4));}catch(e){}
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd&include_24hr_change=true');
+    const d=await r.json();
+    XLM=parseFloat(d?.stellar?.usd)||XLM;
+    animNum($('m-price'),XLM,v=>'$'+v.toFixed(4));
+    const change24=parseFloat(d?.stellar?.usd_24h_change||0);
+    const pct=document.getElementById('m-price-change');
+    if(pct){pct.textContent=(change24>=0?'+':'')+change24.toFixed(2)+'%';pct.style.color=change24>=0?'#00e87a':'#ff3d5a';}
+  }catch(e){}
 }
 
 let _lxlm=0;
