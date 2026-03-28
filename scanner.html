@@ -515,11 +515,17 @@ function drawChart(dIn,dOut){
     if(i<0||i>=_chartDays.length)return;
     const val=_chartPts[i];const day=_chartDays[i];
     if(!tip){tip=document.createElement('div');tip.style.cssText='position:fixed;background:rgba(2,4,10,0.95);border:1px solid rgba(0,200,255,0.3);padding:6px 10px;border-radius:3px;font-family:monospace;font-size:11px;color:#f0f4fa;pointer-events:none;z-index:999;white-space:nowrap';document.body.appendChild(tip);}
-    const sign=val>=0?'+':'';const color=val>=0?'#00e87a':'#ff3d5a';
+    const sign=val>=0?'+':'-';const color=val>=0?'#00e87a':'#ff3d5a';
     tip.innerHTML=`<span style="color:#8da0b8">${day}</span> <span style="color:${color};font-weight:600">${sign}$${Math.abs(val).toLocaleString('en',{maximumFractionDigits:0})}</span>`;
     tip.style.display='block';tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-28)+'px';
   });
   document.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';});
+  document.addEventListener('mousemove',e=>{
+    const cvs=$('wp-chart');if(!cvs||!tip)return;
+    const rect=cvs.getBoundingClientRect();
+    if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)
+      tip.style.display='none';
+  },true);
 })();
 
 function refilter(){
@@ -528,7 +534,9 @@ function refilter(){
     // Rebuild chart from all scan ops
     const addr=$('q').value.trim();
     const dIn2={},dOut2={};
-    _scanOps.forEach(op=>{
+    // Use ALL ops for chart (ignore period filter)
+    const allOps=_scanOps;
+    allOps.forEach(op=>{
       if(op.type!=='payment')return;
       const usd=op._usd||0;if(!usd)return;
       const day=(op.created_at||'').slice(0,10);if(!day)return;
@@ -536,7 +544,7 @@ function refilter(){
       if(isIn)dIn2[day]=(dIn2[day]||0)+usd;
       else dOut2[day]=(dOut2[day]||0)+usd;
     });
-    if(Object.keys(dIn2).length>1||Object.keys(dOut2).length>1)drawChart(dIn2,dOut2);
+    setTimeout(()=>drawChart(dIn2,dOut2),150);
     if($('wp-txcount')&&$('wp-txcount').textContent==='—')$('wp-txcount').textContent=_scanOps.length;
   }
 }
