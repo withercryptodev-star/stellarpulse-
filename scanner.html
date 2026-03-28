@@ -437,9 +437,9 @@ async function loadWalletProfile(addr){
       ops.forEach(op=>{
         if(op.type!=='payment')return;
         const amt=parseFloat(op.amount||0);const code=op.asset_type==='native'?'XLM':(op.asset_code||'?');
-        const usd=code==='XLM'?amt*XLM:(['USDC','USDT'].includes(code)?amt:0);if(!usd)return;
+        const usd=code==='XLM'?amt*XLM:(['USDC','USDT','EURC','USDGLO'].includes(code)?amt:amt*0.01);
         const day=op.created_at.slice(0,10);const isIn=op.to===addr;const other=isIn?op.from:op.to;
-        if(isIn){tin+=usd;dIn[day]=(dIn[day]||0)+usd;}else{tout+=usd;dOut[day]=(dOut[day]||0)+usd;}
+        if(usd>0){if(isIn){tin+=usd;dIn[day]=(dIn[day]||0)+usd;}else{tout+=usd;dOut[day]=(dOut[day]||0)+usd;}}
         if(usd>lar)lar=usd;if(other){cps.add(other);if(EXCHANGES.has(other))excnt++;}
       });
       $('wp-txcount').textContent=ops.length+(ops.length>=200?'+':'');
