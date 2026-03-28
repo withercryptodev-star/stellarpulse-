@@ -237,6 +237,11 @@ h1 .accent{color:var(--cyan)}
     // Whales — drift + detected by sweep
     WHALES.forEach(w=>{
       w.a += w.va; w.r = Math.max(.1, Math.min(.92, w.r+w.vr));
+      // Randomly nudge direction to prevent settling
+      if(Math.random()<.002){ w.va+=(Math.random()-.5)*.001; }
+      if(Math.random()<.002){ w.vr+=(Math.random()-.5)*.0004; }
+      // Clamp drift speed so they keep moving
+      if(Math.abs(w.va)<.0005) w.va=(w.va>=0?.0008:-.0008);
       if(w.alpha<=0&&w.labelAlpha<=0){
         if(Math.random()<.0008){
           // Spawn far from last position - at least PI/2 away in angle
@@ -249,8 +254,8 @@ h1 .accent{color:var(--cyan)}
           w.lastA = newA;
           w.a = newA;
           w.r = Math.random()*.75+.12;
-          w.va=(Math.random()>.5?1:-1)*(Math.random()*.0014+.0003);
-          w.vr=(Math.random()>.5?1:-1)*(Math.random()*.0005+.0001);
+          w.va=(Math.random()>.5?1:-1)*(Math.random()*.002+.0008);
+          w.vr=(Math.random()>.5?1:-1)*(Math.random()*.0008+.0003);
           w.decay=Math.random()*.004+.0015;
         }
       }
@@ -285,7 +290,7 @@ h1 .accent{color:var(--cyan)}
     ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
     ctx.fillStyle='rgba(0,200,255,0.6)'; ctx.fill();
 
-    angle += .008;
+    angle += .004;
     requestAnimationFrame(draw);
   }
   draw();
