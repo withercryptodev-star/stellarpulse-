@@ -287,7 +287,7 @@ nav{
 
   <!-- Period selector -->
   <div class="bp-periods">
-    <span style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);margin-right:4px;align-self:center">History</span>
+    <span style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);margin-right:4px;align-self:center">Period</span>
     <button class="bpp on" onclick="setBPeriod(this,1)">1D</button>
     <button class="bpp"    onclick="setBPeriod(this,7)">1W</button>
     <button class="bpp"    onclick="setBPeriod(this,30)">1M</button>
@@ -1019,10 +1019,9 @@ function setBPeriod(el, days) {
   bpDays = days;
   document.querySelectorAll('.bpp').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
-  renderBPChart();
-  renderBPStats();
   const labels = {1:'Last 24h',7:'Last 7 days',30:'Last 30 days',365:'Last year',99999:'All time'};
   document.getElementById('bp-chart-range').textContent = labels[days]||'';
+  loadBPHistory();
 }
 
 async function loadBalance() {
