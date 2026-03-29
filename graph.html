@@ -787,6 +787,12 @@ async function loadGraph() {
     document.getElementById('empty').style.display='flex';
   } finally {
     document.getElementById('loading').style.display='none';
+    // Reload balance panel if it's open
+    const bp=document.getElementById('balance-panel');
+    if(bp&&bp.style.display==='block'){
+      bpAddr=document.getElementById('addr-input').value.trim();
+      if(bpAddr)loadBalance();
+    }
   }
 }
 
@@ -1213,10 +1219,13 @@ function renderBPChart() {
     const fmt=v=>'$'+Math.abs(v).toLocaleString('en',{maximumFractionDigits:0});
     tip.innerHTML=`<span style="color:#8da0b8">${days[i]}</span> <span style="color:${dayColor}">${daySign}${fmt(dayVal)}</span> <span style="color:#4a6380">net:</span><span style="color:${cumColor}"> ${cumSign}${fmt(cumVal)}</span>`;
     tip.style.display='block';
-    const tipW=200;
-    const left=e.clientX+tipW+20>window.innerWidth?e.clientX-tipW-8:e.clientX+12;
-    tip.style.left=left+'px';
-    tip.style.top=(e.clientY-30)+'px';
+    tip.style.left='-9999px';tip.style.top='-9999px';
+    requestAnimationFrame(()=>{
+      const tw=tip.offsetWidth||180;
+      const left=e.clientX+tw+20>window.innerWidth?e.clientX-tw-8:e.clientX+12;
+      tip.style.left=left+'px';
+      tip.style.top=Math.max(10,e.clientY-30)+'px';
+    });
   });
   cvs.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';});
 })();
