@@ -1176,10 +1176,6 @@ function renderBPChart() {
   if(days.length>0)c.fillText(days[0].slice(5),pad,H2-2);
   if(days.length>1)c.fillText(days[days.length-1].slice(5),W-pad,H2-2);
 }
-    // Out (red)
-  c.lineWidth=1;
-  c.beginPath();c.moveTo(pad,H2-pad);c.lineTo(W-pad,H2-pad);c.stroke();
-}
 
 function renderBPStats() {
   const now    = Date.now();
