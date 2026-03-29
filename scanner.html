@@ -81,8 +81,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
 .pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:2px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase}
 .pw{background:rgba(255,140,0,.12);color:var(--orange)}.ps{background:rgba(0,200,255,.1);color:var(--cyan)}.pm{background:rgba(160,80,255,.1);color:#b87fff}
 .fdesc{font-size:12px;font-weight:500;color:var(--white)}.fsub{font-family:var(--mono);font-size:9px;color:var(--gray2);margin-top:2px}
-.famt{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--white);text-align:right}
+.famt{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--white);text-align:right;display:flex;align-items:center;justify-content:flex-end}
 .famt.big{color:var(--orange)}.famt.huge{color:var(--red)}
+.rhdr-amt{text-align:right}
 .ftime{font-family:var(--mono);font-size:10px;color:var(--gray2);text-align:right}
 
 @media(max-width:768px){.wp-grid{grid-template-columns:1fr}.rhdr,.rrow{grid-template-columns:70px 1fr 90px 70px}.rhdr>div:last-child,.rrow>div:last-child{display:none}}
@@ -233,7 +234,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
   </div>
 
   <div class="rtable">
-    <div class="rhdr"><div>Type</div><div>Details</div><div style="text-align:right">Amount</div><div>Time</div><div>TX</div></div>
+    <div class="rhdr"><div>Type</div><div>Details</div><div class="rhdr-amt">Amount</div><div>Time</div><div>TX</div></div>
     <div id="sres"><div class="rempty">Enter a Stellar address above<br><span style="font-size:9px">Wallet profile, portfolio and full transaction history</span></div></div>
   </div>
 </div>
@@ -415,7 +416,7 @@ function renderResults(rows){
     return`<div class="rrow" onclick="window.open('https://stellar.expert/explorer/public/tx/${h}','_blank')">
       <div>${pill(tp,pc)}</div>
       <div><div class="fdesc">${desc}</div><div class="fsub">${sub}</div></div>
-      <div class="famt ${ac}" style="text-align:right">${fU(op._usd||0)}</div>
+      <div class="famt ${ac}">${fU(op._usd||0)}</div>
       <div class="ftime" style="cursor:default;position:relative" onmouseenter="showDateTip(event,'${op.created_at}')" onmouseleave="hideDateTip()">${ago(op.created_at)}</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--gray2)">${h.slice(0,8)}...</div>
     </div>`;
@@ -699,7 +700,7 @@ $('token-addr')?.addEventListener('input',refilter);
 let _dateTip=null;
 function showDateTip(e,ts){
   if(!_dateTip){_dateTip=document.createElement('div');_dateTip.style.cssText='position:fixed;background:rgba(2,4,10,0.97);border:1px solid rgba(0,200,255,0.3);padding:5px 10px;border-radius:3px;font-family:monospace;font-size:11px;color:#f0f4fa;pointer-events:none;z-index:9999;white-space:nowrap';document.body.appendChild(_dateTip);}
-  const d=new Date(ts.replace(' ','T')+'Z');
+  const d=new Date(ts.includes('Z')||ts.includes('+')?ts:ts.replace(' ','T')+'Z');
   _dateTip.textContent=d.toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
   _dateTip.style.display='block';_dateTip.style.left=(e.clientX+12)+'px';_dateTip.style.top=(e.clientY-30)+'px';
 }
