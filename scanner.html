@@ -247,7 +247,38 @@ const fN=n=>{if(!n||n<=0)return'—';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n
 const ago=ts=>{const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';if(s<2592000)return Math.floor(s/86400)+'d ago';if(s<31536000)return Math.floor(s/2592000)+'mo ago';return Math.floor(s/31536000)+'y ago'};
 const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
 
-const EXCHANGES=new Set(['GBVUDZFNMQBBKXZ3FGPXFCFG5ZFWDRXCWB7EBJSN4Y5BVMHFEVVVT2','GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC','GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN','GBTMY37BHEUNXSESORCPQR4BKRW3QABQBLSRLHM62MQLPJGZJ5EJWQP','GCM4PT6XDZBWOOENDS6FVH4GZMEBXJATD3SSKPKFPUDIEFULBKDFOZY','GAVA7FY3KBXJVZDBX254LPM53YXRUEVLM5BXMXZOC7ZIW3HXFP6LT4SR']);
+const EXCHANGES=new Set([
+  // Coinbase
+  'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
+  // Binance
+  'GBDEVU63Y6NTHJQQZIKVTC23NWLQVP3WJ2RI2OTSJTNYOIGICST6DUXR',
+  'GCM4PT6XDZBWOOENDS6FVH4GZMEBXJATD3SSKPKFPUDIEFULBKDFOZY',
+  // Kraken
+  'GA7QYNF7SOWQ3GLR2BGMZEHXR4ZHYB7D37JIUZF7QNIJHZ3ELA4CXAP',
+  'GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGZN4CXUKYG5AY5RQKWULK',
+  // Bittrex
+  'GBVUDZFNMQBBKXZ3FGPXFCFG5ZFWDRXCWB7EBJSN4Y5BVMHFEVVVT2',
+  // Huobi
+  'GBTMY37BHEUNXSESORCPQR4BKRW3QABQBLSRLHM62MQLPJGZJ5EJWQP',
+  // Gate.io
+  'GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC',
+  // Circle
+  'GAVA7FY3KBXJVZDBX254LPM53YXRUEVLM5BXMXZOC7ZIW3HXFP6LT4SR',
+  // Upbit
+  'GBHKUQDYC4WR4XGZWBXMD3YQEOLKONDQ5RQZXCNXMCBF4UOXTWXGHWZ',
+  // OKX
+  'GCLD4CGMVFNUNBZMG4LIEFGWSMFCQBXRHTDCBVJMWFNNMEGB2JJKWZLP',
+  // Lobstr
+  'GCNSGHUCG5VMGLT5RIYYZSO7VQULQKAJ62QA33DBC5PPBSO57LFWVV6P',
+  // StellarX / interstellar
+  'GCGB3JA7KFO6HXNPQM4JDEQUMW5CRQRTQMR4YWPN2QLBGPWJ2YPKXWA',
+  // Changelly
+  'GBZ35ZJRIKJGYH5PBKLKOZ5L5GZTBN3BFZWVHOAADNKXHKZZ7NDSXQX',
+]);
+// Also detect exchanges by keyword in account data
+function isExchangeAddr(addr){
+  return EXCHANGES.has(addr);
+}
 const filters={type:'all',usd:0,asset:'all',sort:'time',periodHours:1};
 const specials={exchange:false,round:false,repeat:false,circular:false};
 let _scanOps=[],_fetchAbort=false;
@@ -286,7 +317,7 @@ function applyFilters(ops){
     if(cutoff>0&&new Date(op.created_at).getTime()<cutoff)return false;
     const tok=$('token-addr')?.value.trim().toLowerCase();
     if(tok){const mc=op._code?.toLowerCase()===tok;const mi=(op.asset_issuer||op.selling_asset_issuer||'').toLowerCase().includes(tok);if(!mc&&!mi)return false;}
-    if(specials.exchange&&!EXCHANGES.has(op.from||'')&&!EXCHANGES.has(op.to||''))return false;
+    if(specials.exchange&&!isExchangeAddr(op.from||'')&&!isExchangeAddr(op.to||''))return false;
     if(specials.round&&!isRound(op._amt||0))return false;
     return true;
   });
@@ -317,7 +348,7 @@ function renderResults(rows){
     const tp=['manage_sell_offer','manage_buy_offer'].includes(op.type)?'SDEX':op.type?.startsWith('path_')?'PATH':'WHALE';
     const pc=tp==='WHALE'?'pw':tp==='SDEX'?'ps':'pm';
     const desc=tp==='SDEX'?`${op.selling_asset_code||'XLM'} → ${op.buying_asset_code||'XLM'}`:`${fN(op._amt||0)} ${op._code||'?'}`;
-    const fe=EXCHANGES.has(op.from||'')?'🏦':'',te=EXCHANGES.has(op.to||'')?'🏦':'';
+    const fe=isExchangeAddr(op.from||'')?'🏦':'',te=isExchangeAddr(op.to||'')?'🏦':'';
     const sub=op.from?`${fe}${op.from.slice(0,6)}...${op.from.slice(-4)} → ${te}${(op.to||'?').slice(0,6)}...${(op.to||'?').slice(-4)}`:'';
     const h=op.transaction_hash||'';
     const ac=(op._usd||0)>=10e6?'huge':(op._usd||0)>=1e6?'big':'';
@@ -451,7 +482,7 @@ async function loadWalletProfile(addr){
         const usd=code==='XLM'?amt*XLM:(['USDC','USDT','EURC','USDGLO'].includes(code)?amt:amt*0.01);
         const day=op.created_at.slice(0,10);const isIn=op.to===addr;const other=isIn?op.from:op.to;
         if(usd>0){if(isIn){tin+=usd;dIn[day]=(dIn[day]||0)+usd;}else{tout+=usd;dOut[day]=(dOut[day]||0)+usd;}}
-        if(usd>lar)lar=usd;if(other){cps.add(other);if(EXCHANGES.has(other)||EXCHANGES.has(other.slice(0,10)))excnt++;}
+        if(usd>lar)lar=usd;if(other){cps.add(other);if(isExchangeAddr(other))excnt++;}
       });
       if($('wp-txloaded'))$('wp-txloaded').textContent=ops.length+(ops.length>=200?'+':'');
       $('wp-in').textContent=fU(tin);$('wp-out').textContent=fU(tout);
