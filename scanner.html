@@ -592,36 +592,27 @@ function drawChart(dIn,dOut){
     const lineColor=isPos?'#00e87a':'#ff3d5a';
     const fillColor=isPos?'rgba(0,232,122,0.15)':'rgba(255,61,90,0.15)';
     const zeroY=getY(0);
-    // Draw area segments - green above zero, red below
-    for(let i=1;i<pts.length;i++){
-      const x1=pad+(i-1)*bw, x2=pad+i*bw;
-      const y1=getY(pts[i-1]), y2=getY(pts[i]);
-      const isAbove1=pts[i-1]>=0, isAbove2=pts[i]>=0;
-      if(isAbove1===isAbove2){
-        // Same side - simple fill
-        const g=c.createLinearGradient(0,Math.min(y1,y2),0,zeroY);
-        g.addColorStop(0,isAbove1?'rgba(0,232,122,0.3)':'rgba(255,61,90,0.3)');
-        g.addColorStop(1,'rgba(0,0,0,0)');
-        c.beginPath();c.moveTo(x1,zeroY);c.lineTo(x1,y1);c.lineTo(x2,y2);c.lineTo(x2,zeroY);c.closePath();
-        c.fillStyle=g;c.fill();
-      } else {
-        // Crosses zero - split at intersection
-        const t=(pts[i-1])/(pts[i-1]-pts[i]);
-        const xz=x1+(x2-x1)*t;
-        // First segment
-        const g1=c.createLinearGradient(0,0,0,zeroY);
-        g1.addColorStop(0,isAbove1?'rgba(0,232,122,0.3)':'rgba(255,61,90,0.3)');
-        g1.addColorStop(1,'rgba(0,0,0,0)');
-        c.beginPath();c.moveTo(x1,zeroY);c.lineTo(x1,y1);c.lineTo(xz,zeroY);c.closePath();
-        c.fillStyle=g1;c.fill();
-        // Second segment
-        const g2=c.createLinearGradient(0,0,0,zeroY);
-        g2.addColorStop(0,isAbove2?'rgba(0,232,122,0.3)':'rgba(255,61,90,0.3)');
-        g2.addColorStop(1,'rgba(0,0,0,0)');
-        c.beginPath();c.moveTo(xz,zeroY);c.lineTo(x2,y2);c.lineTo(x2,zeroY);c.closePath();
-        c.fillStyle=g2;c.fill();
-      }
-    }
+    // Draw area as single path, clip to above/below zero separately
+    const areaPath=new Path2D();
+    areaPath.moveTo(pad,getY(pts[0]));
+    pts.forEach((v,i)=>{if(i>0)areaPath.lineTo(pad+i*bw,getY(v));});
+    areaPath.lineTo(pad+(pts.length-1)*bw,zeroY);
+    areaPath.lineTo(pad,zeroY);
+    areaPath.closePath();
+    // Green area (above zero)
+    c.save();
+    c.beginPath();c.rect(0,0,W,zeroY);c.clip();
+    const gGreen=c.createLinearGradient(0,getY(maxP),0,zeroY);
+    gGreen.addColorStop(0,'rgba(0,232,122,0.35)');gGreen.addColorStop(1,'rgba(0,232,122,0.02)');
+    c.fillStyle=gGreen;c.fill(areaPath);
+    c.restore();
+    // Red area (below zero)
+    c.save();
+    c.beginPath();c.rect(0,zeroY,W,H);c.clip();
+    const gRed=c.createLinearGradient(0,zeroY,0,H-pad*2);
+    gRed.addColorStop(0,'rgba(255,61,90,0.35)');gRed.addColorStop(1,'rgba(255,61,90,0.02)');
+    c.fillStyle=gRed;c.fill(areaPath);
+    c.restore();
     // Zero line
     if(minP<0&&maxP>0){
       c.strokeStyle='rgba(255,255,255,0.15)';c.lineWidth=0.5*dpr;c.setLineDash([4,4]);
