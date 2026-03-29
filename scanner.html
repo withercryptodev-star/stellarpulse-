@@ -233,7 +233,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;ali
   </div>
 
   <div class="rtable">
-    <div class="rhdr"><div>Type</div><div>Details</div><div>Amount</div><div>Time</div><div>TX</div></div>
+    <div class="rhdr"><div>Type</div><div>Details</div><div style="text-align:right">Amount</div><div>Time</div><div>TX</div></div>
     <div id="sres"><div class="rempty">Enter a Stellar address above<br><span style="font-size:9px">Wallet profile, portfolio and full transaction history</span></div></div>
   </div>
 </div>
@@ -416,7 +416,7 @@ function renderResults(rows){
       <div>${pill(tp,pc)}</div>
       <div><div class="fdesc">${desc}</div><div class="fsub">${sub}</div></div>
       <div class="famt ${ac}" style="text-align:right">${fU(op._usd||0)}</div>
-      <div class="ftime" title="${new Date(op.created_at).toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}">${ago(op.created_at)}</div>
+      <div class="ftime" style="cursor:default;position:relative" onmouseenter="showDateTip(event,'${op.created_at}')" onmouseleave="hideDateTip()">${ago(op.created_at)}</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--gray2)">${h.slice(0,8)}...</div>
     </div>`;
   }).join('');
@@ -443,7 +443,7 @@ async function scan(){
   const isAllTime=filters.periodHours===0;
   const cutoffDate=isAllTime?new Date(0):new Date(Date.now()-filters.periodHours*3600000);
   const label=document.querySelector('#fc-period .chip.on')?.textContent||'';
-  const maxPages=isAllTime?200:filters.periodHours<=1?2:filters.periodHours<=24?5:filters.periodHours<=168?15:50;
+  const maxPages=isAllTime?1000:filters.periodHours<=1?2:filters.periodHours<=24?5:filters.periodHours<=168?15:50;
   try{
     let cursor=null,pages=0,allOps=[];
     const isOldest=filters.sort==='oldest';
@@ -694,6 +694,16 @@ function refilter(){
 }
 $('q').addEventListener('keydown',e=>{if(e.key==='Enter')scan();});
 $('token-addr')?.addEventListener('input',refilter);
+
+// Date tooltip
+let _dateTip=null;
+function showDateTip(e,ts){
+  if(!_dateTip){_dateTip=document.createElement('div');_dateTip.style.cssText='position:fixed;background:rgba(2,4,10,0.97);border:1px solid rgba(0,200,255,0.3);padding:5px 10px;border-radius:3px;font-family:monospace;font-size:11px;color:#f0f4fa;pointer-events:none;z-index:9999;white-space:nowrap';document.body.appendChild(_dateTip);}
+  const d=new Date(ts.replace(' ','T')+'Z');
+  _dateTip.textContent=d.toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
+  _dateTip.style.display='block';_dateTip.style.left=(e.clientX+12)+'px';_dateTip.style.top=(e.clientY-30)+'px';
+}
+function hideDateTip(){if(_dateTip)_dateTip.style.display='none';}
 
 // Auto-load from URL param
 const p=new URLSearchParams(location.search);const pa=p.get('addr');
