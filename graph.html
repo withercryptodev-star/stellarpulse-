@@ -1177,18 +1177,6 @@ function renderBPChart() {
   if(days.length>1)c.fillText(days[days.length-1].slice(5),W-pad,H2-2);
 }
     // Out (red)
-    if(outBuckets[i]>0){
-      const h = (outBuckets[i]/maxVal)*bh*0.9;
-      const grad=c.createLinearGradient(0,H2-pad-h,0,H2-pad);
-      grad.addColorStop(0,'rgba(255,61,90,0.8)');
-      grad.addColorStop(1,'rgba(255,61,90,0.2)');
-      c.fillStyle=grad;
-      c.fillRect(x+bw*0.5, H2-pad-h, bw*0.45, h);
-    }
-  }
-
-  // Baseline
-  c.strokeStyle='rgba(255,255,255,0.06)';
   c.lineWidth=1;
   c.beginPath();c.moveTo(pad,H2-pad);c.lineTo(W-pad,H2-pad);c.stroke();
 }
