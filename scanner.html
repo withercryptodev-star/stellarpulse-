@@ -628,22 +628,16 @@ function drawChart(dIn,dOut){
       c.beginPath();c.moveTo(pad,zeroY);c.lineTo(W-pad,zeroY);c.stroke();
       c.setLineDash([]);
     }
-    // Line - color changes at zero
-    for(let i=1;i<pts.length;i++){
-      const x1=pad+(i-1)*bw, x2=pad+i*bw;
-      const y1=getY(pts[i-1]), y2=getY(pts[i]);
-      const isAbove1=pts[i-1]>=0, isAbove2=pts[i]>=0;
-      if(isAbove1===isAbove2){
-        c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);
-        c.strokeStyle=isAbove1?'#00e87a':'#ff3d5a';c.lineWidth=1.5*dpr;c.stroke();
-      } else {
-        const t=pts[i-1]/(pts[i-1]-pts[i]);
-        const xz=x1+(x2-x1)*t;
-        c.beginPath();c.moveTo(x1,y1);c.lineTo(xz,zeroY);
-        c.strokeStyle=isAbove1?'#00e87a':'#ff3d5a';c.lineWidth=1.5*dpr;c.stroke();
-        c.beginPath();c.moveTo(xz,zeroY);c.lineTo(x2,y2);
-        c.strokeStyle=isAbove2?'#00e87a':'#ff3d5a';c.lineWidth=1.5*dpr;c.stroke();
-      }
+    // Line - smooth with color change at zero using gradient
+    if(pts.length>1){
+      const lineGrad=c.createLinearGradient(pad,0,pad+(pts.length-1)*bw,0);
+      pts.forEach((v,i)=>{
+        const pos=i/(pts.length-1);
+        lineGrad.addColorStop(pos,v>=0?'#00e87a':'#ff3d5a');
+      });
+      c.beginPath();c.moveTo(pad,getY(pts[0]));
+      pts.forEach((v,i)=>{if(i>0)c.lineTo(pad+i*bw,getY(v));});
+      c.strokeStyle=lineGrad;c.lineWidth=1.5*dpr;c.stroke();
     }
     // Baseline
     c.strokeStyle='rgba(255,255,255,0.05)';c.lineWidth=dpr*0.5;
