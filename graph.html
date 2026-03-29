@@ -746,12 +746,16 @@ async function loadGraph() {
 
     // Arrange non-root nodes in orbit - auto-scale radius by count
     const nonRoot=graph.nodes.filter(n=>!n.isRoot);
-    const baseR = Math.max(400, Math.min(1200, 200 + nonRoot.length * 40));
-    nonRoot.forEach((n,i)=>{
-      const angle=(i/nonRoot.length)*Math.PI*2;
-      const r=baseR+n.depth*100+(Math.random()-0.5)*60;
-      n.x=canvas.width/2+Math.cos(angle)*r;
-      n.y=canvas.height/2+Math.sin(angle)*r;
+    // Group by depth, spread within each depth ring
+    const byDepth={};
+    nonRoot.forEach(n=>{if(!byDepth[n.depth])byDepth[n.depth]=[];byDepth[n.depth].push(n);});
+    Object.entries(byDepth).forEach(([d,nodes])=>{
+      const depthR=280*parseInt(d);
+      nodes.forEach((n,i)=>{
+        const angle=(i/nodes.length)*Math.PI*2+(parseInt(d)*0.5);
+        n.x=canvas.width/2+Math.cos(angle)*depthR+(Math.random()-0.5)*80;
+        n.y=canvas.height/2+Math.sin(angle)*depthR+(Math.random()-0.5)*80;
+      });
     });
     // Auto-fit zoom for many nodes
     if(nonRoot.length > 8) {
@@ -1198,12 +1202,19 @@ function renderBPChart() {
     const pts=window._bpPts;
     const i=Math.round((x-pad)/bw);
     if(i<0||i>=days.length){tip.style.display='none';return;}
-    const val=pts[i];
-    const sign=val>=0?'+':'-';
-    const color=val>=0?'#00e87a':'#ff3d5a';
-    tip.innerHTML=`<span style="color:#8da0b8">${days[i]}</span> <span style="color:${color};font-weight:600">${sign}$${Math.abs(val).toLocaleString('en',{maximumFractionDigits:0})}</span>`;
+    const cumVal=pts[i];
+    const cumSign=cumVal>=0?'+':'-';
+    const cumColor=cumVal>=0?'#00e87a':'#ff3d5a';
+    const prevVal=i>0?pts[i-1]:0;
+    const dayVal=cumVal-prevVal;
+    const daySign=dayVal>=0?'+':'-';
+    const dayColor=dayVal>=0?'#00e87a':'#ff3d5a';
+    const fmt=v=>'$'+Math.abs(v).toLocaleString('en',{maximumFractionDigits:0});
+    tip.innerHTML=`<span style="color:#8da0b8">${days[i]}</span> <span style="color:${dayColor}">${daySign}${fmt(dayVal)}</span> <span style="color:#4a6380">net:</span><span style="color:${cumColor}"> ${cumSign}${fmt(cumVal)}</span>`;
     tip.style.display='block';
-    tip.style.left=(e.clientX+12)+'px';
+    const tipW=200;
+    const left=e.clientX+tipW+20>window.innerWidth?e.clientX-tipW-8:e.clientX+12;
+    tip.style.left=left+'px';
     tip.style.top=(e.clientY-30)+'px';
   });
   cvs.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';});
