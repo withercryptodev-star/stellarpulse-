@@ -355,7 +355,9 @@ async function scan(){
   const maxPages=isAllTime?100:filters.periodHours<=1?2:filters.periodHours<=24?5:filters.periodHours<=168?15:50;
   try{
     let cursor=null,pages=0,allOps=[];
-    const baseUrl=isWallet?`${H}/accounts/${q}/payments?limit=200&order=desc&include_failed=false`:`${H}/transactions/${q}/operations?limit=200`;
+    const isOldest=filters.sort==='oldest';
+    const fetchOrder=isOldest?'asc':'desc';
+    const baseUrl=isWallet?`${H}/accounts/${q}/payments?limit=200&order=${fetchOrder}&include_failed=false`:`${H}/transactions/${q}/operations?limit=200`;
     let errorCount=0;
     while(!_fetchAbort){
       const url=cursor?baseUrl+'&cursor='+cursor:baseUrl;
@@ -379,7 +381,7 @@ async function scan(){
       const batch=d?._embedded?.records||[];
       if(!batch.length)break;
       batch.forEach(op=>enrichOp(op));allOps.push(...batch);pages++;
-      if(!isAllTime&&new Date(batch[batch.length-1].created_at)<cutoffDate)break;
+      if(!isAllTime&&!isOldest&&new Date(batch[batch.length-1].created_at)<cutoffDate)break;
       const next=d?._links?.next?.href;if(!next)break;
       const m=next.match(/cursor=([^&]+)/);cursor=m?m[1]:null;if(!cursor)break;
       if(pages>=maxPages)break;
@@ -400,7 +402,7 @@ async function scan(){
     }
     if(!allOps.length) throw new Error('No transactions found');
     if(_fetchAbort)return;
-    const rawOps=isAllTime?allOps:allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
+    const rawOps=(isAllTime||isOldest)?allOps:allOps.filter(op=>new Date(op.created_at)>=cutoffDate);
     // Deduplicate by transaction_hash
     const seenHashes=new Set();
     _scanOps=rawOps.filter(op=>{
@@ -449,9 +451,8 @@ async function loadWalletProfile(addr){
         const usd=code==='XLM'?amt*XLM:(['USDC','USDT','EURC','USDGLO'].includes(code)?amt:amt*0.01);
         const day=op.created_at.slice(0,10);const isIn=op.to===addr;const other=isIn?op.from:op.to;
         if(usd>0){if(isIn){tin+=usd;dIn[day]=(dIn[day]||0)+usd;}else{tout+=usd;dOut[day]=(dOut[day]||0)+usd;}}
-        if(usd>lar)lar=usd;if(other){cps.add(other);if(EXCHANGES.has(other))excnt++;}
+        if(usd>lar)lar=usd;if(other){cps.add(other);if(EXCHANGES.has(other)||EXCHANGES.has(other.slice(0,10)))excnt++;}
       });
-      if($('wp-txcount'))$('wp-txcount').textContent=ops.length+(ops.length>=200?'+':'');
       if($('wp-txloaded'))$('wp-txloaded').textContent=ops.length+(ops.length>=200?'+':'');
       $('wp-in').textContent=fU(tin);$('wp-out').textContent=fU(tout);
       const net=tin-tout;const netEl=$('wp-net');netEl.textContent=(net>=0?'+':'')+fU(net);netEl.className='wp-sv '+(net>=0?'pos':'neg');
