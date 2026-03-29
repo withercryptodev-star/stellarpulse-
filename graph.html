@@ -1147,41 +1147,35 @@ function renderBPChart() {
     return;
   }
 
-  // Group into buckets
-  const now    = Date.now();
-  const cutoff = bpDays>=99999 ? new Date(0) : new Date(now - bpDays*86400000);
-  const filtered = bpHistory.filter(o=>o.date>=cutoff);
-  if(!filtered.length) return;
-
-  const oldest = filtered[filtered.length-1].date;
-  const span   = now - oldest.getTime() || 1;
-  const buckets = 28;
-  const inBuckets  = new Array(buckets).fill(0);
-  const outBuckets = new Array(buckets).fill(0);
-
-  filtered.forEach(op => {
-    const idx = Math.min(buckets-1, Math.floor((op.date.getTime()-oldest.getTime())/span*(buckets-1)));
-    if(op.isIn)  inBuckets[idx]  += op.usd;
-    else         outBuckets[idx] += op.usd;
-  });
-
-  const maxVal = Math.max(...inBuckets, ...outBuckets, 1);
-  const pad = 6*window.devicePixelRatio;
-  const bw  = (W-pad*2)/buckets;
-  const bh  = H2-pad*2;
-
-  // Draw bars
-  for(let i=0;i<buckets;i++){
-    const x = pad + i*bw;
-    // In (green)
-    if(inBuckets[i]>0){
-      const h = (inBuckets[i]/maxVal)*bh*0.9;
-      const grad=c.createLinearGradient(0,H2-pad-h,0,H2-pad);
-      grad.addColorStop(0,'rgba(0,232,122,0.8)');
-      grad.addColorStop(1,'rgba(0,232,122,0.2)');
-      c.fillStyle=grad;
-      c.fillRect(x, H2-pad-h, bw*0.45, h);
-    }
+  // Area chart - cumulative net flow
+  const cutoff2=bpDays>=99999?new Date(0):new Date(Date.now()-bpDays*86400000);
+  const filtered=bpHistory.filter(o=>o.date>=cutoff2);
+  if(!filtered.length)return;
+  const dayB={};
+  filtered.forEach(op=>{const day=op.date.toISOString().slice(0,10);if(!dayB[day])dayB[day]={i:0,o:0};if(op.isIn)dayB[day].i+=op.usd;else dayB[day].o+=op.usd;});
+  const days=Object.keys(dayB).sort().slice(-60);
+  if(!days.length)return;
+  let run=0;const pts=days.map(d=>{run+=(dayB[d].i||0)-(dayB[d].o||0);return run;});
+  const minP=Math.min(...pts),maxP=Math.max(...pts,1),range=maxP-minP||1;
+  const pad=10*dpr,bw2=(W-pad*2)/(days.length-1||1);
+  const getY=v=>H2-pad*2-(((v-minP)/range)*(H2-pad*3)*.85);
+  const zeroY=getY(0);
+  const aPath=new Path2D();
+  aPath.moveTo(pad,getY(pts[0]));pts.forEach((v,i)=>{if(i>0)aPath.lineTo(pad+i*bw2,getY(v));});
+  aPath.lineTo(pad+(pts.length-1)*bw2,zeroY);aPath.lineTo(pad,zeroY);aPath.closePath();
+  c.save();c.beginPath();c.rect(0,0,W,zeroY);c.clip();
+  const gG=c.createLinearGradient(0,getY(maxP),0,zeroY);gG.addColorStop(0,'rgba(0,232,122,0.35)');gG.addColorStop(1,'rgba(0,232,122,0.02)');c.fillStyle=gG;c.fill(aPath);c.restore();
+  c.save();c.beginPath();c.rect(0,zeroY,W,H2);c.clip();
+  const gR=c.createLinearGradient(0,zeroY,0,H2);gR.addColorStop(0,'rgba(255,61,90,0.35)');gR.addColorStop(1,'rgba(255,61,90,0.02)');c.fillStyle=gR;c.fill(aPath);c.restore();
+  const lG=c.createLinearGradient(pad,0,pad+(pts.length-1)*bw2,0);
+  pts.forEach((v,i)=>{lG.addColorStop(i/(pts.length-1||1),v>=0?'#00e87a':'#ff3d5a');});
+  c.beginPath();c.moveTo(pad,getY(pts[0]));pts.forEach((v,i)=>{if(i>0)c.lineTo(pad+i*bw2,getY(v));});
+  c.strokeStyle=lG;c.lineWidth=1.5*dpr;c.stroke();
+  if(minP<0&&maxP>0){c.strokeStyle='rgba(255,255,255,0.15)';c.lineWidth=0.5*dpr;c.setLineDash([4,4]);c.beginPath();c.moveTo(pad,zeroY);c.lineTo(W-pad,zeroY);c.stroke();c.setLineDash([]);}
+  c.fillStyle='rgba(255,255,255,0.2)';c.font=`${9*dpr}px monospace`;c.textAlign='center';
+  if(days.length>0)c.fillText(days[0].slice(5),pad,H2-2);
+  if(days.length>1)c.fillText(days[days.length-1].slice(5),W-pad,H2-2);
+}
     // Out (red)
     if(outBuckets[i]>0){
       const h = (outBuckets[i]/maxVal)*bh*0.9;
