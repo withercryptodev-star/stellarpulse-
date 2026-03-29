@@ -1,65 +1,80 @@
 # 🌟 StellarMonitor
 
-> **Real-time on-chain intelligence bot for the Stellar Network — surfacing whale moves, DEX activity, and Soroban events directly to Twitter/X.**
+> **Real-time on-chain intelligence platform for the Stellar Network**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue)](https://python.org)
 [![Stellar](https://img.shields.io/badge/Network-Stellar-black)](https://stellar.org)
-[![Soroban](https://img.shields.io/badge/Smart%20Contracts-Soroban-purple)](https://soroban.stellar.org)
-[![Status](https://img.shields.io/badge/Status-In%20Development-yellow)]()
+[![Live](https://img.shields.io/badge/Status-Live-green)](https://stellarmonitor.xyz)
+
+**🌐 [stellarmonitor.xyz](https://stellarmonitor.xyz) · 📱 [Telegram](https://t.me/stellarmonitor) · 🐦 [Twitter/X](https://x.com/StellarMonitor)**
 
 ---
 
 ## What is StellarMonitor?
 
-StellarPulse is an open-source monitoring bot that watches the Stellar blockchain in real time and automatically posts notable on-chain activity to a public Twitter/X account.
-
-Most blockchain activity goes unnoticed. Block explorers exist, but they require you to already know what to look for. StellarPulse flips this — it watches everything and surfaces what matters, in plain English, to anyone following the account.
-
-**Live Twitter feed:** [@StellarMonitor](https://x.com/StellarMonitor)
+StellarMonitor is an open-source on-chain intelligence platform for the Stellar Network. It monitors whale transfers, SDEX activity, Soroban smart contract events, and liquidity pools — delivering real-time alerts via Telegram, Twitter/X, and a public web dashboard.
 
 ---
 
-## What it tracks
+## Platform Features
 
-| Event Type | Description |
-|---|---|
-| 🐋 **Whale Transfers** | Large XLM / USDC / asset movements above configurable thresholds |
-| 📊 **SDEX Activity** | Big order fills and unusual trading patterns on Stellar DEX |
-| 💧 **Liquidity Pools** | Significant LP deposits, withdrawals, and pool creation events |
-| 🤖 **Soroban Contracts** | Smart contract invocations and notable contract events |
-| 🔍 **Wash Trading** | Suspicious circular transaction patterns between wallets |
-| 🌐 **Cross-border Payments** | Large cross-border payment flows via Stellar anchors |
+### 📡 Live Feed
+Real-time alert stream with whale transfers, SDEX trades, airdrops, and Soroban events. Auto-refreshes every 2 seconds. Filterable by type and USD value.
+
+### 🔍 Wallet Scanner
+Deep transaction history explorer for any Stellar address.
+- Up to 10,000 pages of transaction history
+- Filter by type, asset, period, USD value
+- Exchange detection (TOML-verified + 30+ known addresses)
+- Balance history area chart with daily net flow
+- Activity stats: inflow, outflow, net flow, counterparties, exchange txs
+- Sort by Newest / Oldest / Largest
+- Hover on timestamps for exact dates
+
+### 🕸️ Wallet Graph
+Interactive force-directed node graph visualizing transaction connections.
+- Depth 1/2/3 exploration hops
+- Node type filters: Root / Sent to / Received from / Both / Exchange
+- Auto-fit zoom for large graphs
+- Click node → load its graph · Double-click → open in Scanner
+- Balance history panel with area chart per period (1D/1W/1M/1Y/All)
+
+### 💧 Liquidity Pools
+Live AMM pool rankings sourced from Stellar Expert API.
+- 1000+ pools ranked by TVL, Volume, APR, Earned fees
+- Earned 24h column: real fee revenue for LPs in USD
+- Filter by minimum volume, sort by any column
+- Add Liquidity links for active pools
 
 ---
 
 ## Architecture
-
 ```
 Stellar Horizon API (SSE Stream)
         │
         ▼
 ┌─────────────────────┐
-│   Event Ingestion   │  ← Horizon SSE + Soroban RPC
-│   & Normalization   │
+│   Monitor Bot       │  ← Python 3.11, asyncio
+│   (main.py)         │  ← Whale, SDEX, Soroban, Airdrop detectors
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│   Detection Engine  │  ← Threshold rules + pattern matching
-│   (Rules + Filters) │
+│   Publisher         │  ← Telegram Bot API + Twitter/X API v2
+│                     │  ← SQLite deduplication
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│   Formatter         │  ← Human-readable tweet generation
-│   & Enrichment      │  ← StellarExpert entity labels
+│   FastAPI           │  ← REST API at api.stellarmonitor.xyz
+│   (api.py)          │  ← Rate limited, CORS restricted
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│   Twitter/X API v2  │  ← Rate-limited posting pipeline
-│   Publishing Layer  │
+│   Web Dashboard     │  ← HTML/CSS/JS, hosted on VPS
+│   stellarmonitor.xyz│  ← Reads Horizon + Stellar Expert + own API
 └─────────────────────┘
 ```
 
@@ -67,133 +82,71 @@ Stellar Horizon API (SSE Stream)
 
 ## Tech Stack
 
-- **Python 3.11+** — async event processing, ThreadPoolExecutor
-- **Stellar Horizon API** — real-time transaction streaming via SSE
-- **Soroban RPC** — smart contract event monitoring
-- **StellarExpert API** — address labeling (exchanges, anchors, market makers)
-- **Twitter/X API v2** — automated tweet publishing with thread support
-- **SQLite** — local deduplication and event history
+| Component | Technology |
+|-----------|-----------|
+| Bot | Python 3.11, asyncio, Tweepy, python-telegram-bot |
+| API | FastAPI, SQLite, Uvicorn |
+| Frontend | Vanilla HTML/CSS/JS (no framework) |
+| Data | Stellar Horizon SSE, Stellar Expert API, CoinGecko |
+| Infra | Ubuntu VPS, Nginx, Certbot SSL, systemd |
 
 ---
 
-## Quickstart
+## API
 
-```bash
-# Clone the repo
-git clone https://github.com/YOUR_HANDLE/stellarpulse
-cd stellarpulse
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys
-
-# Run the bot
-python main.py
+Base URL: `https://api.stellarmonitor.xyz`
+```
+GET /api/alerts?limit=100&type=WHALE_USDC&min_usd=50000
+GET /api/stats
+GET /api/whale?min_usd=500000&limit=20
+GET /api/pairs?limit=5
 ```
 
-### Environment variables
+No authentication required. Rate limited to 60 requests/minute per IP.
 
+---
+
+## Self-hosting
+```bash
+git clone https://github.com/withercryptodev-star/stellarmonitor
+cd stellarmonitor
+
+# Install Python dependencies
+pip install -r bot/requirements.txt
+
+# Configure
+cp bot/settings.env.example bot/settings.env
+# Edit settings.env with your API keys
+
+# Run the bot
+python bot/main.py
+
+# Run the API
+uvicorn bot/api:app --host 127.0.0.1 --port 8000
+```
+
+### Required environment variables
 ```env
-# Twitter/X API
 TWITTER_API_KEY=
 TWITTER_API_SECRET=
 TWITTER_ACCESS_TOKEN=
 TWITTER_ACCESS_SECRET=
-
-# Stellar
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
 HORIZON_URL=https://horizon.stellar.org
-SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
-
-# Thresholds
 WHALE_THRESHOLD_XLM=1000000
 WHALE_THRESHOLD_USDC=50000
 ```
 
 ---
 
-## Configuration
+## Security
 
-Edit `config.yaml` to customize what gets monitored and posted:
-
-```yaml
-alerts:
-  whale_transfers:
-    enabled: true
-    min_xlm: 1_000_000
-    min_usdc: 50_000
-
-  sdex:
-    enabled: true
-    min_fill_usdc: 10_000
-
-  soroban:
-    enabled: true
-    track_contracts: []   # empty = all contracts
-
-  liquidity_pools:
-    enabled: true
-    min_change_usdc: 25_000
-
-posting:
-  max_tweets_per_hour: 12
-  include_explorer_link: true
-  explorer_base: "https://stellar.expert/explorer/public"
-```
-
----
-
-## Example Tweets
-
-> 🐋 **Whale Alert** — Stellar Network  
-> `GBXXX...` just moved **4,200,000 XLM** (~$630K)  
-> To: `GCYYY...` (Binance Hot Wallet)  
-> 🔗 stellar.expert/tx/...
-
----
-
-> 📊 **SDEX Large Fill**  
-> **12,400 XLM/USDC** filled in a single order  
-> Price: 0.1502 | Spread: 0.02%  
-> 🔗 stellar.expert/tx/...
-
----
-
-> 🤖 **Soroban Event**  
-> Liquidity +$890,000 added to XLM/USDC pool  
-> Contract: `CABC...` (Verified AMM)  
-> 🔗 stellar.expert/tx/...
-
----
-
-## Roadmap
-
-- [x] Project architecture design
-- [x] Horizon SSE integration research
-- [ ] Core event ingestion pipeline
-- [ ] Detection engine (whale + SDEX rules)
-- [ ] Twitter/X publishing layer
-- [ ] Soroban contract event support
-- [ ] Address enrichment via StellarExpert
-- [ ] Web dashboard (public feed)
-- [ ] Telegram bot variant
-- [ ] Open API for third-party integrations
-
----
-
-## Contributing
-
-Contributions welcome! Please open an issue first to discuss what you'd like to change.
-
-```bash
-git checkout -b feature/your-feature
-# make changes
-git commit -m "feat: your feature description"
-git push origin feature/your-feature
-# open Pull Request
-```
+- All traffic over HTTPS (Let's Encrypt)
+- Security headers: HSTS, CSP, X-Frame-Options, X-Content-Type-Options
+- API rate limiting (Nginx + FastAPI middleware)
+- CORS restricted to stellarmonitor.xyz
+- No cookies, no tracking, no user data stored
 
 ---
 
@@ -203,10 +156,4 @@ MIT — free to use, fork, and build on.
 
 ---
 
-## Built with support from
-
-<img src="https://stellar.org/images/stellar-logo.svg" height="24" alt="Stellar"> &nbsp; **Stellar Community Fund (SCF)**
-
----
-
-*StellarPulse makes the Stellar blockchain visible — one tweet at a time.*
+*No whale goes undetected.*
