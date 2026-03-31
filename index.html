@@ -23,7 +23,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);-webkit-fon
 nav{position:fixed;top:0;left:0;right:0;z-index:200;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(2,4,10,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--white);font-weight:700;font-size:15px;letter-spacing:-.3px}
 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
-.nav-links{display:flex;gap:2px}
+.nav-links{display:flex;gap:1px}
 .nav-link{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--gray1);text-decoration:none;padding:6px 10px;border-radius:3px;transition:all .15s;border:1px solid transparent}
 .nav-link:hover{color:var(--white);background:rgba(255,255,255,.05);border-color:var(--edge)}
 .nav-right{display:flex;gap:10px;align-items:center}
@@ -96,10 +96,11 @@ h1 .accent{color:var(--cyan)}
     <a href="/feed"    class="nav-link">Live Feed</a>
     <a href="/scanner" class="nav-link">Scanner</a>
     <a href="/graph"   class="nav-link">Graph</a>
-    <a href="/pools"        class="nav-link">Pools</a>
-    <a href="/soroban"     class="nav-link">Soroban</a>
+    <a href="/pools"   class="nav-link">Pools</a>
+    <a href="/soroban" class="nav-link">Soroban</a>
     <a href="/intelligence" class="nav-link">Intelligence</a>
-    <a href="/docs"        class="nav-link">Docs</a>
+    <a href="/docs"    class="nav-link">Docs</a>
+  </div>
   <div class="nav-right">
     <a href="https://t.me/stellarmonitor" class="nav-cta" target="_blank" style="border-color:rgba(0,200,255,.5);background:rgba(0,200,255,.08);">Telegram ↗</a>
     <a href="https://x.com/StellarMonitor" class="nav-cta" target="_blank">Follow ↗</a>
