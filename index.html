@@ -344,17 +344,12 @@ async function fetchPrice(){
 
 async function fetchStats(){
   try{
-    const r=await fetch(`${API}/api/alerts?limit=10000`);
+    const r=await fetch(`${API}/api/stats`);
     if(!r.ok)return;
     const d=await r.json();
-    const alerts=d.alerts||[];
-    const cutoff=Date.now()-86400000;
-    const today=alerts.filter(a=>new Date((a.created_at||'').replace(' ','T')+'Z').getTime()>cutoff);
-    let vol=0,big=0;
-    today.forEach(a=>{const u=a.usd_value||0;vol+=u;if(u>big)big=u;});
-    animNum($('s-alerts'),today.length,v=>v);
-    animNum($('s-usdc'),vol,fU);
-    animNum($('s-biggest'),big,fU);
+    animNum($('s-alerts'),d.total_alerts||0,v=>v);
+    animNum($('s-usdc'),d.usdc_volume||0,fU);
+    animNum($('s-biggest'),d.biggest_usd||0,fU);
     $('s-upd').textContent=new Date().toLocaleTimeString('en',{hour12:false});
   }catch(e){}
 }
