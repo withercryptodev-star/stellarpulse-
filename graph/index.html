@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzAyMDQwYSIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGM4ZmYiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiLz4KICA8dGV4dCB4PSIxNiIgeT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIxNyIgZmlsbD0iIzAwYzhmZiI+UzwvdGV4dD4KPC9zdmc+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StellarMonitor — Wallet Graph</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#05080d; --panel:rgba(12,18,32,0.92); --edge:rgba(255,255,255,0.08);
+  --cyan:#00c8ff; --green:#00e87a; --orange:#ff8c00; --red:#ff3d5a;
+  --purple:#c084fc; --pink:#f472b6; --yellow:#fbbf24;
+  --white:#f0f4fa; --gray1:#8da0b8; --gray2:#4a6380; --gray3:#1a2535;
+  --mono:'DM Mono',monospace; --sans:'Outfit',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--sans);color:var(--white)}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;
+  background:rgba(5,8,13,0.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--edge);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--white);font-weight:700;font-size:14px}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--cyan)}50%{opacity:.5;box-shadow:0 0 3px var(--cyan)}}
+.nav-center{display:flex;gap:2px;justify-content:center}
+.gnav-link{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8da0b8;text-decoration:none;padding:7px 16px;border-radius:3px;transition:all .15s;border:1px solid transparent}
+.gnav-link:hover{color:#f0f4fa;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.07)}
+.gnav-active{color:#00c8ff !important;border-color:rgba(0,200,255,.3) !important;background:rgba(0,200,255,.06) !important}
+.gnav-cta{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 18px;border:1px solid #00c8ff;color:#00c8ff;border-radius:3px;text-decoration:none;transition:all .15s}
+.gnav-cta:hover{background:#00c8ff;color:#05080d}
+
+/* CANVAS */
+#canvas{position:fixed;inset:0;top:52px;cursor:grab}
+#canvas:active{cursor:grabbing}
+
+/* SEARCH OVERLAY */
+.search-overlay{
+  position:fixed;top:52px;left:0;right:0;z-index:100;
+  display:flex;justify-content:center;
+  padding:20px 24px 0;
+  pointer-events:none;
+}
+.search-box{
+  display:flex;gap:10px;
+  background:rgba(5,8,13,0.9);
+  border:1px solid var(--edge);
+  border-radius:4px;padding:10px;
+  backdrop-filter:blur(20px);
+  pointer-events:all;
+  width:100%;max-width:580px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.search-input{
+  flex:1;background:rgba(255,255,255,0.04);
+  border:1px solid var(--edge);border-radius:3px;
+  padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--white);
+  outline:none;transition:border-color .15s;
+}
+.search-input::placeholder{color:var(--gray2)}
+.search-input:focus{border-color:var(--cyan)}
+.search-btn{
+  font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;
+  text-transform:uppercase;padding:10px 20px;
+  background:var(--cyan);color:var(--bg);border:none;border-radius:3px;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.search-btn:hover{background:#33d6ff;box-shadow:0 0 16px rgba(0,200,255,.4)}
+
+/* DEPTH CONTROL */
+.depth-control{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(5,8,13,0.9);border:1px solid var(--edge);
+  border-radius:4px;padding:8px 16px;backdrop-filter:blur(20px);
+  pointer-events:all;z-index:100;
+}
+.depth-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray1);margin-right:4px}
+.depth-btn{
+  font-family:var(--mono);font-size:11px;
+  padding:5px 12px;border:1px solid var(--edge);
+  color:var(--gray1);border-radius:3px;cursor:pointer;
+  background:transparent;transition:all .15s;
+}
+.depth-btn.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.08)}
+.depth-btn:hover:not(.on){color:var(--white)}
+.sep{width:1px;height:16px;background:var(--edge);margin:0 4px}
+.ctrl-btn{
+  font-family:var(--mono);font-size:11px;
+  padding:5px 12px;border:1px solid var(--edge);
+  color:var(--gray1);border-radius:3px;cursor:pointer;
+  background:transparent;transition:all .15s;
+}
+.ctrl-btn:hover{color:var(--white);border-color:rgba(255,255,255,.2)}
+
+/* TOOLTIP */
+#tooltip{
+  position:fixed;z-index:300;
+  background:rgba(5,8,13,0.95);
+  border:1px solid var(--edge);
+  border-radius:4px;padding:12px 16px;
+  font-family:var(--mono);font-size:11px;
+  pointer-events:none;
+  backdrop-filter:blur(20px);
+  max-width:280px;
+  box-shadow:0 8px 24px rgba(0,0,0,.6);
+  display:none;
+}
+.tt-addr{color:var(--cyan);font-size:10px;letter-spacing:.5px;margin-bottom:8px;word-break:break-all}
+.tt-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:4px}
+.tt-key{color:var(--gray1)}
+.tt-val{color:var(--white);font-weight:500}
+
+/* INFO PANEL */
+#info-panel{
+  position:fixed;right:20px;top:72px;z-index:100;
+  background:rgba(5,8,13,0.92);border:1px solid var(--edge);
+  border-radius:4px;padding:16px;width:220px;
+  backdrop-filter:blur(20px);font-family:var(--mono);
+  display:none;
+}
+.ip-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:12px}
+.ip-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.ip-row:last-child{border-bottom:none}
+.ip-k{font-size:10px;color:var(--gray1)}
+.ip-v{font-size:10px;color:var(--white)}
+
+/* LEGEND */
+.legend{
+  position:fixed;left:20px;bottom:70px;z-index:100;
+  background:rgba(5,8,13,0.9);border:1px solid var(--edge);
+  border-radius:4px;padding:12px 14px;
+  font-family:var(--mono);font-size:9px;
+  backdrop-filter:blur(20px);
+}
+.legend-title{letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:10px}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:var(--gray1)}
+.legend-item:last-child{margin-bottom:0}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* LOADING */
+#loading{
+  position:fixed;inset:0;top:52px;z-index:150;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(5,8,13,0.85);backdrop-filter:blur(8px);
+  font-family:var(--mono);
+}
+.loading-spinner{
+  width:40px;height:40px;border-radius:50%;
+  border:2px solid var(--edge);border-top-color:var(--cyan);
+  animation:spin 0.8s linear infinite;margin-bottom:16px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:11px;color:var(--gray1);letter-spacing:1px}
+.loading-sub{font-size:9px;color:var(--gray2);margin-top:8px}
+
+/* EMPTY STATE */
+#empty{
+  position:fixed;inset:0;top:52px;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.empty-icon{font-size:48px;margin-bottom:20px;opacity:.4}
+.empty-title{font-size:20px;font-weight:700;margin-bottom:8px;opacity:.6}
+.empty-sub{font-family:var(--mono);font-size:11px;color:var(--gray2);text-align:center;line-height:1.8}
+
+/* BALANCE PANEL */
+#balance-panel{
+  position:fixed;left:20px;top:72px;z-index:100;
+  background:rgba(5,8,13,0.96);border:1px solid var(--edge);
+  border-radius:4px;width:290px;
+  backdrop-filter:blur(20px);font-family:var(--mono);
+  display:none;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.bp-hdr{padding:11px 14px;border-bottom:1px solid var(--edge);display:flex;align-items:center;justify-content:space-between}
+.bp-ttl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2)}
+.bp-close{font-size:13px;color:var(--gray2);cursor:pointer;transition:color .15s;background:none;border:none;line-height:1;padding:0}
+.bp-close:hover{color:var(--white)}
+.bp-assets{padding:10px 14px;border-bottom:1px solid var(--edge)}
+.bp-arow{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.bp-arow:last-child{border-bottom:none}
+.bp-aname{font-size:11px;color:var(--white);font-weight:500}
+.bp-abal{text-align:right}
+.bp-aamt{font-size:11px;color:var(--cyan)}
+.bp-ausd{font-size:9px;color:var(--gray2);margin-top:1px}
+.bp-periods{display:flex;gap:4px;padding:9px 14px;border-bottom:1px solid var(--edge);flex-wrap:wrap}
+.bpp{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 9px;border:1px solid var(--edge);color:var(--gray2);border-radius:2px;cursor:pointer;transition:all .15s;background:transparent}
+.bpp.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.08)}
+.bpp:hover:not(.on){color:var(--white)}
+.bp-chart-wrap{padding:10px 14px 6px}
+.bp-chart-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);margin-bottom:6px;display:flex;justify-content:space-between}
+#bp-canvas{width:100%;height:90px;display:block}
+.bp-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--edge);border-top:1px solid var(--edge)}
+.bp-stat{padding:9px 12px;background:rgba(5,8,13,.98)}
+.bp-sl{font-size:9px;color:var(--gray2);margin-bottom:3px}
+.bp-sv{font-size:12px;color:var(--white);font-weight:500}
+.bp-sv.pos{color:var(--green)}.bp-sv.neg{color:var(--red)}
+.bp-loading{padding:24px 14px;text-align:center;font-size:10px;color:var(--gray2);display:none}
+.bps-spin{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--edge);border-top-color:var(--cyan);animation:spin .7s linear infinite;margin:0 auto 8px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="logo-dot"></div>StellarMonitor
+  </a>
+  <div class="nav-center">
+    <a href="/feed"    class="gnav-link">Live Feed</a>
+    <a href="/scanner" class="gnav-link">Scanner</a>
+    <a href="/graph"   class="gnav-link gnav-active">Graph</a>
+    <a href="/pools"   class="gnav-link">Pools</a>
+    <a href="/soroban"      class="gnav-link">Soroban</a>
+    <a href="/intelligence" class="gnav-link">Intelligence</a>
+    <a href="/docs"    class="gnav-link">Docs</a>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><a href="https://t.me/stellarmonitor" class="gnav-cta" style="border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.06)" target="_blank">Telegram ↗</a><a href="https://x.com/StellarMonitor" class="gnav-cta" target="_blank">Follow ↗</a></div>
+</nav>
+
+<!-- SEARCH -->
+<div class="search-overlay">
+  <div class="search-box">
+    <input type="text" class="search-input" id="addr-input"
+           placeholder="Enter Stellar wallet address (G...)"
+           spellcheck="false">
+    <button class="search-btn" onclick="loadGraph()">Map →</button>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<canvas id="canvas"></canvas>
+
+<!-- DEPTH + CONTROLS -->
+<div class="depth-control">
+  <span class="depth-label">Depth</span>
+  <button class="depth-btn on" onclick="setDepth(this,1)">1</button>
+  <button class="depth-btn"    onclick="setDepth(this,2)">2</button>
+  <button class="depth-btn"    onclick="setDepth(this,3)">3</button>
+  <div class="sep"></div>
+  <button class="ctrl-btn" onclick="resetView()">Reset view</button>
+  <button class="ctrl-btn" onclick="exportPng()">Export PNG</button>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-title">Node type</div>
+  <label class="legend-item" style="cursor:pointer"><input type="checkbox" id="f-root" checked onchange="applyNodeFilter()"><div class="ldot" style="background:var(--cyan)"></div>Root wallet</label>
+  <label class="legend-item" style="cursor:pointer"><input type="checkbox" id="f-sent" checked onchange="applyNodeFilter()"><div class="ldot" style="background:var(--green)"></div>Sent to</label>
+  <label class="legend-item" style="cursor:pointer"><input type="checkbox" id="f-recv" checked onchange="applyNodeFilter()"><div class="ldot" style="background:var(--orange)"></div>Received from</label>
+  <label class="legend-item" style="cursor:pointer"><input type="checkbox" id="f-both" checked onchange="applyNodeFilter()"><div class="ldot" style="background:var(--purple)"></div>Both directions</label>
+  <label class="legend-item" style="cursor:pointer"><input type="checkbox" id="f-exch" checked onchange="applyNodeFilter()"><div class="ldot" style="background:var(--gray2)"></div>Exchange</label>
+</div>
+
+<!-- INFO PANEL -->
+<div id="info-panel">
+  <div class="ip-title">Graph Stats</div>
+  <div class="ip-row"><div class="ip-k">Nodes</div><div class="ip-v" id="ip-nodes">—</div></div>
+  <div class="ip-row"><div class="ip-k">Connections</div><div class="ip-v" id="ip-edges">—</div></div>
+  <div class="ip-row"><div class="ip-k">Sent</div><div class="ip-v" id="ip-sent">—</div></div>
+  <div class="ip-row"><div class="ip-k">Received</div><div class="ip-v" id="ip-recv">—</div></div>
+  <div class="ip-row"><div class="ip-k">Total volume</div><div class="ip-v" id="ip-vol">—</div></div>
+  <div class="ip-row"><div class="ip-k">Period</div><div class="ip-v" id="ip-period">—</div></div>
+  <div style="padding:10px 0 0">
+    <button onclick="showBalance()" style="width:100%;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px;border:1px solid var(--edge);color:var(--cyan);border-radius:2px;cursor:pointer;background:rgba(0,200,255,.06);transition:all .15s" onmouseover="this.style.background='rgba(0,200,255,.12)'" onmouseout="this.style.background='rgba(0,200,255,.06)'">
+      💰 View Balance History
+    </button>
+  </div>
+</div>
+
+<!-- BALANCE PANEL -->
+<div id="balance-panel">
+  <div class="bp-hdr">
+    <div class="bp-ttl">Balance & History</div>
+    <button class="bp-close" onclick="closeBalance()">✕</button>
+  </div>
+
+  <!-- Current assets -->
+  <div class="bp-assets" id="bp-assets">
+    <div class="bp-loading" id="bp-assets-load" style="display:flex;align-items:center;gap:8px;padding:10px 0">
+      <div class="bps-spin"></div><span>Loading balances...</span>
+    </div>
+  </div>
+
+  <!-- Period selector -->
+  <div class="bp-periods">
+    <span style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);margin-right:4px;align-self:center">Period</span>
+    <button class="bpp on" onclick="setBPeriod(this,1)">1D</button>
+    <button class="bpp"    onclick="setBPeriod(this,7)">1W</button>
+    <button class="bpp"    onclick="setBPeriod(this,30)">1M</button>
+    <button class="bpp"    onclick="setBPeriod(this,365)">1Y</button>
+    <button class="bpp"    onclick="setBPeriod(this,99999)">All</button>
+  </div>
+
+  <!-- Chart -->
+  <div class="bp-chart-wrap">
+    <div class="bp-chart-lbl">
+      <span id="bp-chart-ttl">USDC flow</span>
+      <span id="bp-chart-range" style="color:var(--gray2)"></span>
+    </div>
+    <canvas id="bp-canvas" style="cursor:crosshair"></canvas>
+    <div class="bp-loading" id="bp-chart-load">
+      <div class="bps-spin"></div>Loading history...
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="bp-stats">
+    <div class="bp-stat"><div class="bp-sl">Net flow</div><div class="bp-sv" id="bp-netflow">—</div></div>
+    <div class="bp-stat"><div class="bp-sl">Total in</div><div class="bp-sv pos" id="bp-in">—</div></div>
+    <div class="bp-stat"><div class="bp-sl">Total out</div><div class="bp-sv neg" id="bp-out">—</div></div>
+    <div class="bp-stat"><div class="bp-sl">Transactions</div><div class="bp-sv" id="bp-txcount">—</div></div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-addr" id="tt-addr"></div>
+  <div class="tt-row"><div class="tt-key">Sent</div><div class="tt-val" id="tt-sent">—</div></div>
+  <div class="tt-row"><div class="tt-key">Received</div><div class="tt-val" id="tt-recv">—</div></div>
+  <div class="tt-row"><div class="tt-key">Txs</div><div class="tt-val" id="tt-txs">—</div></div>
+  <div class="tt-row"><div class="tt-key">Volume</div><div class="tt-val" id="tt-vol">—</div></div>
+  <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:var(--gray2);border-top:1px solid rgba(255,255,255,.06);padding-top:6px">
+    Click → Load graph &nbsp;·&nbsp; Dblclick → Scanner
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading" style="display:none">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="load-text">Fetching transactions...</div>
+  <div class="loading-sub" id="load-sub"></div>
+</div>
+
+<!-- EMPTY STATE -->
+<div id="empty">
+  <div class="empty-icon">🔭</div>
+  <div class="empty-title">Wallet Graph</div>
+  <div class="empty-sub">Enter a Stellar wallet address above<br>to visualize its transaction network</div>
+</div>
+
+<script>
+const H = 'https://horizon.stellar.org';
+let XLM_PRICE = 0.174;
+let graph = { nodes:[], edges:[] };
+let sim = { running:false };
+let camera = { x:0, y:0, scale:1 };
+let drag = { active:false, node:null, startX:0, startY:0, camX:0, camY:0 };
+let hoveredNode = null;
+let depth = 1;
+let animFrame = null;
+
+const EXCHANGES_GRAPH = new Set([
+  'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
+  'GBDEVU63Y6NTHJQQZIKVTC23NWLQVP3WJ2RI2OTSJTNYOIGICST6DUXR',
+  'GCNSGHUCG5VMGLT5RIYYZSO7VQULQKAJ62QA33DBC5PPBSO57LFWVV6P',
+  'GBIDGDSVQXAHGZNOETS7ADUMWCDSQJU4R53EZRK6ONP3BA42UJL5PAHR',
+  'GC7BWB2ME4LII3TVWTHUIT7KGJXU4D5M6JUNLQ57WA7JERDNSAEXLOAN',
+  'GCGLKWJX5BPX2BOCOHYA6KUBZ67FR23DAHLG7VD3YRTGEYGZX57KUGFP',
+  'GCUAD7TQWTAHMIOFQQG6DYU3YWOKJYLRJ4EONNNVIU5VNA4HNHO7NTSS',
+  'GDM4UWTGHCWSTM7Z46PNF4BLH35GS6IUZYBWNNI4VU5KVIHYSIVQ55Y6',
+  'GAVA7FY3KBXJVZDBX254LPM53YXRUEVLM5BXMXZOC7ZIW3HXFP6LT4SR',
+  'GBVUDZFNMQBBKXZ3FGPXFCFG5ZFWDRXCWB7EBJSN4Y5BVMHFEVVVT2',
+  'GBTMY37BHEUNXSESORCPQR4BKRW3QABQBLSRLHM62MQLPJGZJ5EJWQP',
+  'GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC',
+]);
+const KNOWN = {
+  'GBVUDZFNMQBBKXZ3FGPXFCFG5ZFWDRXCWB7EBJSN4Y5BVMHFEVVVT2':'Binance',
+  'GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC':'Kraken',
+  'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN':'Coinbase',
+  'GBTMY37BHEUNXSESORCPQR4BKRW3QABQBLSRLHM62MQLPJGZJ5EJWQP':'Bybit',
+  'GCM4PT6XDZBWOOENDS6FVH4GZMEBXJATD3SSKPKFPUDIEFULBKDFOZY':'Gate.io',
+  'GAVA7FY3KBXJVZDBX254LPM53YXRUEVLM5BXMXZOC7ZIW3HXFP6LT4SR':'Circle Dist.',
+  'GBICPPFMVFLHWBP22NQUQ7LNXJLPFZIWKP7DXIGLBCZLZQPBVQDXQFS':'Circle Issuer',
+};
+const EXCHANGE_SET = new Set([...Object.keys(KNOWN), ...EXCHANGES_GRAPH]);
+
+// ── CANVAS SETUP ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight - 52;
+}
+resize();
+window.addEventListener('resize', () => { resize(); draw(); });
+
+// ── UTILS ───────────────────────────────────────────────────────────────────
+const fU = n => {
+  if(!n) return '$0';
+  if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+n.toFixed(0);
+};
+const shortAddr = a => a ? a.slice(0,4)+'...'+a.slice(-4) : '?';
+const label = addr => KNOWN[addr] || shortAddr(addr);
+
+// ── FETCH ────────────────────────────────────────────────────────────────────
+async function fetchPayments(addr, pages=3) {
+  let ops=[], cursor=null;
+  const base=`${H}/accounts/${addr}/payments?limit=200&order=desc&include_failed=false`;
+  for(let i=0;i<pages;i++){
+    const url=cursor?base+'&cursor='+cursor:base;
+    const r=await fetch(url);
+    if(!r.ok) break;
+    const d=await r.json();
+    const batch=d?._embedded?.records||[];
+    ops.push(...batch);
+    const next=d?._links?.next?.href;
+    if(!next) break;
+    const m=next.match(/cursor=([^&]+)/);
+    cursor=m?m[1]:null;
+    if(!cursor||batch.length<200) break;
+    await new Promise(r=>setTimeout(r,80));
+  }
+  return ops;
+}
+
+// ── BUILD GRAPH ──────────────────────────────────────────────────────────────
+async function buildGraph(rootAddr, maxDepth) {
+  const nodeMap = {};
+  const edgeMap = {};
+  const queue = [[rootAddr, 0]];
+  const visited = new Set();
+
+  const getNode = (addr) => {
+    if(!nodeMap[addr]) {
+      nodeMap[addr] = {
+        id: addr,
+        label: label(addr),
+        isExchange: EXCHANGE_SET.has(addr),
+        sentUsd: 0, recvUsd: 0, txCount: 0,
+        depth: 999,
+        x: canvas.width/2 + (Math.random()-.5)*200,
+        y: canvas.height/2 + (Math.random()-.5)*200,
+        vx:0, vy:0, r:0,
+      };
+    }
+    return nodeMap[addr];
+  };
+
+  const rootNode = getNode(rootAddr);
+  rootNode.depth = 0;
+  rootNode.isRoot = true;
+
+  let totalFetched = 0;
+
+  while(queue.length) {
+    const [addr, d] = queue.shift();
+    if(visited.has(addr)) continue;
+    visited.add(addr);
+
+    document.getElementById('load-text').textContent = `Mapping depth ${d+1}...`;
+    document.getElementById('load-sub').textContent  = `${visited.size} wallets explored · ${totalFetched} transactions`;
+
+    const pages = d===0 ? 3 : 1; // limit pages per depth for performance
+    const ops = await fetchPayments(addr, pages);
+    totalFetched += ops.length;
+
+    ops.forEach(op => {
+      if(op.type !== 'payment') return;
+      const amt = parseFloat(op.amount||0);
+      const code = op.asset_type==='native'?'XLM':(op.asset_code||'?');
+      let usd = code==='XLM'?amt*XLM_PRICE:(['USDC','USDT'].includes(code)?amt:0);
+      if(!usd || usd < 100) return;
+
+      const from = op.from || '';
+      const to   = op.to   || '';
+      if(!from || !to) return;
+
+      // Ensure nodes exist
+      getNode(from);
+      getNode(to);
+
+      // Update depth
+      if(from===addr) nodeMap[to].depth   = Math.min(nodeMap[to].depth,   d+1);
+      if(to  ===addr) nodeMap[from].depth = Math.min(nodeMap[from].depth, d+1);
+
+      // Edge key
+      const key = from+'|'+to;
+      if(!edgeMap[key]) edgeMap[key] = { from, to, usd:0, txs:0 };
+      edgeMap[key].usd += usd;
+      edgeMap[key].txs++;
+
+      // Update node stats
+      nodeMap[from].sentUsd  += usd;
+      nodeMap[to].recvUsd    += usd;
+      nodeMap[from].txCount++;
+      nodeMap[to].txCount++;
+
+      // Queue for deeper exploration — limit to 25 nodes per depth level
+      if(d < maxDepth) {
+        const nodesAtNextDepth = queue.filter(([,qd])=>qd===d+1).length;
+        if(from===addr && !visited.has(to)   && !EXCHANGE_SET.has(to)   && nodesAtNextDepth<25) queue.push([to,   d+1]);
+        if(to  ===addr && !visited.has(from) && !EXCHANGE_SET.has(from) && nodesAtNextDepth<25) queue.push([from, d+1]);
+      }
+    });
+  }
+
+  // Compute radius by volume
+  const allNodes = Object.values(nodeMap);
+  const maxVol = Math.max(...allNodes.map(n => n.sentUsd + n.recvUsd), 1);
+  allNodes.forEach(n => {
+    const vol = n.sentUsd + n.recvUsd;
+    n.r = n.isRoot ? 28 : Math.max(10, Math.min(26, 10 + (vol/maxVol)*22));
+  });
+
+  return {
+    nodes: allNodes,
+    edges: Object.values(edgeMap).filter(e => nodeMap[e.from] && nodeMap[e.to]),
+    nodeMap,
+  };
+}
+
+// ── COLOR ─────────────────────────────────────────────────────────────────────
+function nodeColor(n) {
+  if(n.isRoot)     return '#00c8ff';
+  if(n.isExchange) return '#6b7280';
+  const hasSent = n.sentUsd > 0;
+  const hasRecv = n.recvUsd > 0;
+  if(hasSent && hasRecv) return '#c084fc'; // both
+  if(hasSent) return '#00e87a';            // sent to
+  return '#ff8c00';                        // received from
+}
+
+// ── FORCE SIMULATION ──────────────────────────────────────────────────────────
+function tickForce() {
+  const nodes = graph.nodes;
+  const edges = graph.edges;
+  const nm    = graph.nodeMap || {};
+  const cx    = canvas.width/2;
+  const cy    = canvas.height/2;
+  const W     = canvas.width;
+  const H2    = canvas.height;
+  const margin = 80;
+
+  // Repulsion between all nodes
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i], b=nodes[j];
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const dist=Math.sqrt(dx*dx+dy*dy)||1;
+      const minDist=(a.r+b.r)*4+120;
+      if(dist<minDist){
+        const force=(minDist-dist)/dist*0.8;
+        const fx=dx*force, fy=dy*force;
+        if(!a.pinned){a.vx-=fx;a.vy-=fy;}
+        if(!b.pinned){b.vx+=fx;b.vy+=fy;}
+      }
+    }
+  }
+
+  // Attraction along edges — only pull if too far
+  edges.forEach(e=>{
+    const a=nm[e.from], b=nm[e.to];
+    if(!a||!b) return;
+    const dx=b.x-a.x, dy=b.y-a.y;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const idealDist = 250 + (a.r+b.r);
+    if(dist > idealDist){
+      const force=(dist-idealDist)/dist*0.015;
+      const fx=dx*force, fy=dy*force;
+      if(!a.pinned){a.vx+=fx;a.vy+=fy;}
+      if(!b.pinned){b.vx-=fx;b.vy-=fy;}
+    }
+  });
+
+  // Strong center gravity
+  nodes.forEach(n=>{
+    if(n.isRoot){
+      n.vx+=(cx-n.x)*0.08;
+      n.vy+=(cy-n.y)*0.08;
+    } else {
+      // no center gravity for non-root
+    }
+  });
+
+  // Integrate + dampen + velocity cap + hard boundary
+  nodes.forEach(n=>{
+    if(n.pinned || drag.node===n) return;
+    // Cap velocity to prevent explosion
+    const speed=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
+    if(speed>6){n.vx=n.vx/speed*6;n.vy=n.vy/speed*6;}
+    n.vx*=0.72; n.vy*=0.72;
+    n.x+=n.vx; n.y+=n.vy;
+    // Bounce back if outside canvas
+    if(n.x<50)   {n.x=50;   n.vx=Math.abs(n.vx)*0.3;}
+    if(n.x>W-50) {n.x=W-50; n.vx=-Math.abs(n.vx)*0.3;}
+    if(n.y<50)   {n.y=50;   n.vy=Math.abs(n.vy)*0.3;}
+    if(n.y>H2-50){n.y=H2-50;n.vy=-Math.abs(n.vy)*0.3;}
+  });
+}
+
+// ── DRAW ─────────────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(camera.x, camera.y);
+  ctx.scale(camera.scale, camera.scale);
+
+  const nm = graph.nodeMap || {};
+
+  // Edges
+  graph.edges.forEach(e=>{
+    if(!isNodeVisible(graph.nodeMap[e.from])||!isNodeVisible(graph.nodeMap[e.to])) return;
+    const a=nm[e.from], b=nm[e.to];
+    if(!a||!b) return;
+    const maxUsd=5e6;
+    const alpha=Math.min(0.08+e.usd/maxUsd*0.35, 0.5);
+    const width=Math.max(0.5, Math.min(2.5, e.usd/500000));
+
+    // Directional glow on hovered
+    const isHov = hoveredNode && (e.from===hoveredNode.id||e.to===hoveredNode.id);
+
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.strokeStyle = isHov
+      ? 'rgba(0,200,255,0.7)'
+      : `rgba(255,255,255,${alpha})`;
+    ctx.lineWidth = isHov ? 1.5 : width;
+    ctx.stroke();
+
+    // Arrow
+    const angle=Math.atan2(b.y-a.y, b.x-a.x);
+    const len=Math.sqrt((b.x-a.x)**2+(b.y-a.y)**2);
+    if(len<20) return;
+    const mx=a.x+(b.x-a.x)*0.62, my=a.y+(b.y-a.y)*0.62;
+    const as=5;
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(mx-Math.cos(angle-0.4)*as, my-Math.sin(angle-0.4)*as);
+    ctx.lineTo(mx-Math.cos(angle+0.4)*as, my-Math.sin(angle+0.4)*as);
+    ctx.closePath();
+    ctx.fillStyle=isHov?'rgba(0,200,255,0.8)':`rgba(255,255,255,${alpha*1.5})`;
+    ctx.fill();
+  });
+
+  // Nodes
+  graph.nodes.forEach(n=>{
+    if(!isNodeVisible(n)) return;
+    const col  = nodeColor(n);
+    const isHov = hoveredNode && hoveredNode.id===n.id;
+    const r = isHov ? n.r*1.12 : n.r;
+    const glowR = r*2.4;
+
+    // Glow
+    const grad = ctx.createRadialGradient(n.x,n.y,r*0.3,n.x,n.y,glowR);
+    grad.addColorStop(0, col+'44');
+    grad.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, glowR, 0, Math.PI*2);
+    ctx.fillStyle=grad; ctx.fill();
+
+    // Circle fill
+    const fillGrad=ctx.createRadialGradient(n.x-r*.3,n.y-r*.3,0,n.x,n.y,r);
+    fillGrad.addColorStop(0, lighten(col,40));
+    fillGrad.addColorStop(1, col);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    ctx.fillStyle=fillGrad; ctx.fill();
+
+    // Border
+    ctx.strokeStyle= isHov ? '#ffffff' : col+'aa';
+    ctx.lineWidth  = isHov ? 2 : 1.2;
+    ctx.stroke();
+
+    // Inner ring for exchanges
+    if(n.isExchange) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r*0.6, 0, Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,0.15)';
+      ctx.lineWidth=1; ctx.stroke();
+    }
+
+    // Label
+    const scale=camera.scale;
+    if(scale>0.35 || n.isRoot || isHov) {
+      ctx.fillStyle= isHov?'#ffffff':'rgba(255,255,255,0.85)';
+      ctx.font=`${n.isRoot?'600 ':''}${Math.max(9,11/Math.max(1,1/scale))}px 'DM Mono'`;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      const txt = n.isRoot ? '⬟ ROOT' : n.label;
+      ctx.fillText(txt, n.x, n.y);
+    }
+  });
+
+  ctx.restore();
+}
+
+function lighten(hex, amt) {
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.min(255,r+amt)},${Math.min(255,g+amt)},${Math.min(255,b+amt)})`;
+}
+
+// ── ANIMATION LOOP ───────────────────────────────────────────────────────────
+let simTicks=0;
+function loop(){
+  if(sim.running && simTicks<800){
+    tickForce();
+    simTicks++;
+  }
+  draw();
+  animFrame=requestAnimationFrame(loop);
+}
+
+// ── LOAD GRAPH ───────────────────────────────────────────────────────────────
+async function loadGraph() {
+  const addr = document.getElementById('addr-input').value.trim();
+  if(!addr || !addr.startsWith('G') || addr.length < 40) {
+    alert('Please enter a valid Stellar address (starts with G)');
+    return;
+  }
+
+  // Reset
+  if(animFrame) cancelAnimationFrame(animFrame);
+  graph = {nodes:[], edges:[], nodeMap:{}};
+  sim.running=false;
+  document.getElementById('empty').style.display='none';
+  document.getElementById('info-panel').style.display='none';
+  document.getElementById('loading').style.display='flex';
+  camera={x:0,y:0,scale:1};
+
+  try {
+    // Fetch XLM price
+    try {
+      const pr=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');
+      const pd=await pr.json();
+      XLM_PRICE=parseFloat(pd?.stellar?.usd)||0.174;
+    } catch(e){}
+
+    const result = await buildGraph(addr, depth);
+    graph = result;
+
+    // Place root at center
+    const root=graph.nodeMap[addr];
+    if(root){root.x=canvas.width/2;root.y=canvas.height/2;root.pinned=false;}
+
+    // Arrange non-root nodes in orbit - auto-scale radius by count
+    const nonRoot=graph.nodes.filter(n=>!n.isRoot);
+    // Group by depth, spread within each depth ring
+    const byDepth={};
+    nonRoot.forEach(n=>{if(!byDepth[n.depth])byDepth[n.depth]=[];byDepth[n.depth].push(n);});
+    Object.entries(byDepth).forEach(([d,nodes])=>{
+      const depthR=280*parseInt(d);
+      nodes.forEach((n,i)=>{
+        const angle=(i/nodes.length)*Math.PI*2+(parseInt(d)*0.5);
+        n.x=canvas.width/2+Math.cos(angle)*depthR+(Math.random()-0.5)*80;
+        n.y=canvas.height/2+Math.sin(angle)*depthR+(Math.random()-0.5)*80;
+      });
+    });
+    // Auto-fit zoom for many nodes
+    if(nonRoot.length > 8) {
+      const fitScale = Math.max(0.25, Math.min(0.85, 10 / Math.sqrt(nonRoot.length)));
+      const cx = canvas.width/2, cy = canvas.height/2;
+      camera.scale = fitScale;
+      camera.x = cx * (1 - fitScale);
+      camera.y = cy * (1 - fitScale);
+    }
+
+    // Info panel
+    const totalVol=graph.nodes.reduce((s,n)=>s+n.sentUsd+n.recvUsd,0)/2;
+    const totalSent=graph.nodeMap[addr]?.sentUsd||0;
+    const totalRecv=graph.nodeMap[addr]?.recvUsd||0;
+    document.getElementById('ip-nodes').textContent=graph.nodes.length;
+    document.getElementById('ip-edges').textContent=graph.edges.length;
+    document.getElementById('ip-sent').textContent=fU(totalSent);
+    document.getElementById('ip-recv').textContent=fU(totalRecv);
+    document.getElementById('ip-vol').textContent=fU(totalVol);
+    document.getElementById('ip-period').textContent='Recent txs';
+    document.getElementById('info-panel').style.display='block';
+
+    sim.running=true;
+    simTicks=0;
+    loop();
+
+  } catch(e) {
+    alert('Error: '+e.message);
+    document.getElementById('empty').style.display='flex';
+  } finally {
+    document.getElementById('loading').style.display='none';
+    // Reload balance panel if it's open
+    const bp=document.getElementById('balance-panel');
+    if(bp&&bp.style.display==='block'){
+      bpAddr=document.getElementById('addr-input').value.trim();
+      if(bpAddr)loadBalance();
+    }
+  }
+}
+
+// ── INTERACTION ───────────────────────────────────────────────────────────────
+function worldPos(e){
+  const rect=canvas.getBoundingClientRect();
+  return {
+    x:(e.clientX-rect.left-camera.x)/camera.scale,
+    y:(e.clientY-rect.top -camera.y)/camera.scale,
+  };
+}
+
+function nodeAt(wx,wy){
+  let best=null, bestD=Infinity;
+  graph.nodes.forEach(n=>{
+    const d=Math.sqrt((n.x-wx)**2+(n.y-wy)**2);
+    if(d<n.r+6 && d<bestD){best=n;bestD=d;}
+  });
+  return best;
+}
+
+canvas.addEventListener('mousedown',e=>{
+  const {x,y}=worldPos(e);
+  const node=nodeAt(x,y);
+  drag.active=true;
+  drag.didDrag=false; // reset on new click
+  drag.startX=e.clientX; drag.startY=e.clientY;
+  drag.camX=camera.x; drag.camY=camera.y;
+  if(node){drag.node=node; canvas.style.cursor='grabbing';}
+  else drag.node=null;
+});
+
+canvas.addEventListener('mousemove',e=>{
+  const {x,y}=worldPos(e);
+  if(drag.active){
+    // Mark as drag if moved more than 5px
+    const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+    if(Math.sqrt(dx*dx+dy*dy)>5) drag.didDrag=true;
+    if(drag.node){
+      drag.node.x=x; drag.node.y=y;
+      drag.node.vx=0; drag.node.vy=0;
+    } else {
+      camera.x=drag.camX+(e.clientX-drag.startX);
+      camera.y=drag.camY+(e.clientY-drag.startY);
+    }
+  }
+  const hov=nodeAt(x,y);
+  hoveredNode=hov||null;
+  canvas.style.cursor=hov?'pointer':drag.active?'grabbing':'grab';
+
+  const tt=document.getElementById('tooltip');
+  if(hov){
+    document.getElementById('tt-addr').textContent=hov.isRoot?hov.id:(KNOWN[hov.id]||hov.id);
+    document.getElementById('tt-sent').textContent=fU(hov.sentUsd);
+    document.getElementById('tt-recv').textContent=fU(hov.recvUsd);
+    document.getElementById('tt-txs').textContent=hov.txCount;
+    document.getElementById('tt-vol').textContent=fU(hov.sentUsd+hov.recvUsd);
+    tt.style.display='block';
+    tt.style.left=(e.clientX+14)+'px';
+    tt.style.top =(e.clientY-10)+'px';
+  } else {
+    tt.style.display='none';
+  }
+});
+
+canvas.addEventListener('mouseup',()=>{
+  drag.active=false; drag.node=null;
+  canvas.style.cursor='grab';
+});
+
+// Одиночный клик — загрузить граф этого кошелька на той же странице
+let _clickTimer = null;
+canvas.addEventListener('click', e => {
+  if(drag.didDrag) return;
+  clearTimeout(_clickTimer);
+  _clickTimer = setTimeout(()=>{
+    const {x,y} = worldPos(e);
+    const node = nodeAt(x,y);
+    if(node && !node.isRoot){
+      // Загружаем граф этого кошелька на той же странице
+      document.getElementById('addr-input').value = node.id;
+      loadGraph();
+    }
+  }, 220);
+});
+
+// Двойной клик — открыть в Scanner в новой вкладке
+canvas.addEventListener('dblclick', e => {
+  clearTimeout(_clickTimer);
+  const {x,y} = worldPos(e);
+  const node = nodeAt(x,y);
+  if(node){
+    window.open('/scanner.html?addr='+encodeURIComponent(node.id), '_blank');
+  }
+});
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const factor=e.deltaY>0?0.88:1.14;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  camera.x=mx-(mx-camera.x)*factor;
+  camera.y=my-(my-camera.y)*factor;
+  camera.scale=Math.max(0.15,Math.min(4,camera.scale*factor));
+},{passive:false});
+
+// Touch support
+let lastTouchDist=0;
+canvas.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){
+    const t=e.touches[0];
+    const fake={clientX:t.clientX,clientY:t.clientY};
+    canvas.dispatchEvent(Object.assign(new MouseEvent('mousedown'),fake));
+  }
+  if(e.touches.length===2){
+    lastTouchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  }
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){
+    const t=e.touches[0];
+    canvas.dispatchEvent(Object.assign(new MouseEvent('mousemove'),{clientX:t.clientX,clientY:t.clientY}));
+  }
+  if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const factor=d/lastTouchDist;
+    const cx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    camera.x=cx-(cx-camera.x)*factor;
+    camera.y=cy-(cy-camera.y)*factor;
+    camera.scale=Math.max(0.15,Math.min(4,camera.scale*factor));
+    lastTouchDist=d;
+  }
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  canvas.dispatchEvent(new MouseEvent('mouseup'));
+},{passive:true});
+
+// ── CONTROLS ─────────────────────────────────────────────────────────────────
+function setDepth(el,d){
+  depth=d;
+  document.querySelectorAll('.depth-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  // Автоматически перезагружаем граф если адрес уже введён
+  const addr = document.getElementById('addr-input').value.trim();
+  if(addr) loadGraph();
+}
+
+function resetView(){
+  camera={x:0,y:0,scale:1};
+}
+
+let _nodeFilter={root:true,sent:true,recv:true,both:true,exch:true};
+function applyNodeFilter(){
+  _nodeFilter={
+    root:document.getElementById('f-root').checked,
+    sent:document.getElementById('f-sent').checked,
+    recv:document.getElementById('f-recv').checked,
+    both:document.getElementById('f-both').checked,
+    exch:document.getElementById('f-exch').checked,
+  };
+  draw();
+}
+function isNodeVisible(n){
+  if(n.isRoot) return _nodeFilter.root;
+  if(n.isExchange) return _nodeFilter.exch;
+  const hasSent=n.sentUsd>0, hasRecv=n.recvUsd>0;
+  if(hasSent&&hasRecv) return _nodeFilter.both;
+  if(hasSent) return _nodeFilter.sent;
+  if(hasRecv) return _nodeFilter.recv;
+  return true;
+}
+
+function exportPng(){
+  const a=document.createElement('a');
+  draw();
+  a.download='stellarmonitor-graph.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.getElementById('addr-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') loadGraph();
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loop();
+
+// Auto-load from URL param
+const params=new URLSearchParams(location.search);
+const pAddr=params.get('addr');
+if(pAddr){
+  document.getElementById('addr-input').value=pAddr;
+  loadGraph();
+}
+
+// ── BALANCE PANEL ─────────────────────────────────────────────────────────────
+let bpAddr = '';
+let bpDays = 1;
+let bpHistory = [];
+
+const fU2 = n => {
+  if(!n&&n!==0) return '—';
+  const abs=Math.abs(n);
+  const s=n<0?'-':'';
+  if(abs>=1e9) return s+'$'+(abs/1e9).toFixed(2)+'B';
+  if(abs>=1e6) return s+'$'+(abs/1e6).toFixed(2)+'M';
+  if(abs>=1e3) return s+'$'+(abs/1e3).toFixed(0)+'K';
+  return s+'$'+abs.toFixed(0);
+};
+const fN2 = (n,dec=2) => {
+  if(!n&&n!==0) return '—';
+  if(n>=1e9) return (n/1e9).toFixed(dec)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(dec)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(0)+'K';
+  return n.toFixed(dec);
+};
+
+async function showBalance() {
+  bpAddr = document.getElementById('addr-input').value.trim();
+  if(!bpAddr) return;
+  const panel = document.getElementById('balance-panel');
+  panel.style.display = 'block';
+  await loadBalance();
+}
+
+function closeBalance() {
+  document.getElementById('balance-panel').style.display = 'none';
+}
+
+function setBPeriod(el, days) {
+  bpDays = days;
+  document.querySelectorAll('.bpp').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  const labels = {1:'Last 24h',7:'Last 7 days',30:'Last 30 days',365:'Last year',99999:'All time'};
+  document.getElementById('bp-chart-range').textContent = labels[days]||'';
+  loadBPHistory();
+}
+
+async function loadBalance() {
+  if(!bpAddr) return;
+
+  // ── Current balances ──────────────────────────────────────────────────────
+  const assetsEl = document.getElementById('bp-assets');
+  assetsEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;font-size:10px;color:var(--gray2)"><div class="bps-spin"></div>Loading balances...</div>';
+
+  try {
+    const r = await fetch(`${H}/accounts/${bpAddr}`);
+    if(!r.ok) throw new Error('Account not found');
+    const d = await r.json();
+    const balances = d.balances || [];
+
+    // Sort: native XLM first, then by balance desc
+    balances.sort((a,b) => {
+      if(a.asset_type==='native') return -1;
+      if(b.asset_type==='native') return 1;
+      return parseFloat(b.balance)-parseFloat(a.balance);
+    });
+
+    const rows = balances.slice(0,8).map(b => {
+      const code = b.asset_type==='native' ? 'XLM' : b.asset_code;
+      const amt  = parseFloat(b.balance);
+      const usd  = code==='XLM' ? amt*XLM_PRICE :
+                   (code==='USDC'||code==='USDT') ? amt : null;
+      return `<div class="bp-arow">
+        <div class="bp-aname">${code}</div>
+        <div class="bp-abal">
+          <div class="bp-aamt">${fN2(amt,code==='XLM'?2:2)}</div>
+          ${usd!==null?`<div class="bp-ausd">${fU2(usd)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+    const totalUSD = balances.reduce((s,b) => {
+      const code = b.asset_type==='native'?'XLM':b.asset_code;
+      const amt  = parseFloat(b.balance);
+      return s + (code==='XLM'?amt*XLM_PRICE:(code==='USDC'||code==='USDT'?amt:0));
+    }, 0);
+
+    assetsEl.innerHTML = rows +
+      `<div style="display:flex;justify-content:space-between;padding:8px 0 2px;border-top:1px solid var(--edge);margin-top:4px">
+        <span style="font-size:9px;color:var(--gray2)">Total USD value</span>
+        <span style="font-size:11px;color:var(--cyan);font-weight:500">${fU2(totalUSD)}</span>
+      </div>`;
+  } catch(e) {
+    assetsEl.innerHTML = `<div style="font-size:10px;color:var(--red);padding:8px 0">${e.message}</div>`;
+  }
+
+  // ── Transaction history ───────────────────────────────────────────────────
+  await loadBPHistory();
+}
+
+async function loadBPHistory() {
+  document.getElementById('bp-chart-load').style.display = 'flex';
+  document.getElementById('bp-canvas').style.opacity = '0.2';
+
+  try {
+    // Fetch up to 15 pages of payments for "All time", fewer for short periods
+    const maxPages = bpDays >= 99999 ? 500 : bpDays >= 365 ? 100 : bpDays >= 30 ? 30 : 5;
+    let ops=[], cursor=null;
+    const cutoff = bpDays>=99999 ? new Date(0) : new Date(Date.now()-bpDays*86400000);
+    const base = `${H}/accounts/${bpAddr}/payments?limit=200&order=desc&include_failed=false`;
+
+    for(let p=0; p<maxPages; p++){
+      const url = cursor?base+'&cursor='+cursor:base;
+      const r = await fetch(url);
+      if(!r.ok) break;
+      const d = await r.json();
+      const batch = d?._embedded?.records||[];
+      if(!batch.length) break;
+      ops.push(...batch);
+      const oldest = new Date(batch[batch.length-1].created_at);
+      if(oldest < cutoff) break;
+      const next=d?._links?.next?.href;
+      if(!next) break;
+      const m=next.match(/cursor=([^&]+)/);
+      cursor=m?m[1]:null;
+      if(!cursor) break;
+      await new Promise(r=>setTimeout(r,80));
+    }
+
+    // Filter to period and compute daily flow
+    bpHistory = ops
+      .filter(op => op.type==='payment' && new Date(op.created_at)>=cutoff)
+      .map(op => {
+        const amt  = parseFloat(op.amount||0);
+        const code = op.asset_type==='native'?'XLM':(op.asset_code||'?');
+        const usd  = code==='XLM'?amt*XLM_PRICE:(['USDC','USDT'].includes(code)?amt:0);
+        const isIn = op.to === bpAddr;
+        return { date:new Date(op.created_at), usd, isIn, code };
+      })
+      .filter(op => op.usd > 0);
+
+    renderBPChart();
+    renderBPStats();
+
+  } catch(e) {
+    console.warn('History error:', e);
+  } finally {
+    document.getElementById('bp-chart-load').style.display = 'none';
+    document.getElementById('bp-canvas').style.opacity = '1';
+  }
+}
+
+function renderBPChart() {
+  const cvs = document.getElementById('bp-canvas');
+  const dpr = window.devicePixelRatio||1;
+  if(!cvs)return;
+  cvs.width  = (cvs.parentElement?.offsetWidth||262)*dpr;
+  cvs.height = 120*dpr;
+  cvs.style.height='120px';
+  cvs.style.display='block';
+  const c = cvs.getContext('2d');
+  const W = cvs.width, H2 = cvs.height;
+  c.clearRect(0,0,W,H2);
+
+  if(!bpHistory.length) {
+    c.fillStyle='rgba(255,255,255,0.1)';
+    c.font=`${10*dpr}px DM Mono`;
+    c.textAlign='center';
+    c.fillText('No data for this period', W/2, H2/2);
+    return;
+  }
+
+  // Area chart - cumulative net flow
+  const cutoff2=bpDays>=99999?new Date(0):new Date(Date.now()-bpDays*86400000);
+  const filtered=bpHistory.filter(o=>o.date>=cutoff2);
+  if(!filtered.length)return;
+  const dayB={};
+  filtered.forEach(op=>{const day=op.date.toISOString().slice(0,10);if(!dayB[day])dayB[day]={i:0,o:0};if(op.isIn)dayB[day].i+=op.usd;else dayB[day].o+=op.usd;});
+  const days=Object.keys(dayB).sort().slice(-60);
+  if(!days.length)return;
+  let run=0;const pts=days.map(d=>{run+=(dayB[d].i||0)-(dayB[d].o||0);return run;});
+  const pad=10*dpr,bw2=(W-pad*2)/(days.length-1||1);
+  const minP=Math.min(...pts),maxP=Math.max(...pts,1),range=maxP-minP||1;
+  window._bpDays=days;window._bpPts=pts;window._bpPad=pad;window._bpBw=bw2;window._bpW=W;window._bpDpr=dpr;
+  const plotH=H2-pad*3;
+  const getY=v=>pad+(plotH-(((v-minP)/range)*plotH*.9));
+  const zeroY=getY(0);
+  const aPath=new Path2D();
+  aPath.moveTo(pad,getY(pts[0]));pts.forEach((v,i)=>{if(i>0)aPath.lineTo(pad+i*bw2,getY(v));});
+  aPath.lineTo(pad+(pts.length-1)*bw2,zeroY);aPath.lineTo(pad,zeroY);aPath.closePath();
+  c.save();c.beginPath();c.rect(0,0,W,zeroY);c.clip();
+  const gG=c.createLinearGradient(0,getY(maxP),0,zeroY);gG.addColorStop(0,'rgba(0,232,122,0.35)');gG.addColorStop(1,'rgba(0,232,122,0.02)');c.fillStyle=gG;c.fill(aPath);c.restore();
+  c.save();c.beginPath();c.rect(0,zeroY,W,H2);c.clip();
+  const gR=c.createLinearGradient(0,zeroY,0,H2);gR.addColorStop(0,'rgba(255,61,90,0.35)');gR.addColorStop(1,'rgba(255,61,90,0.02)');c.fillStyle=gR;c.fill(aPath);c.restore();
+  const lG=c.createLinearGradient(pad,0,pad+(pts.length-1)*bw2,0);
+  pts.forEach((v,i)=>{lG.addColorStop(i/(pts.length-1||1),v>=0?'#00e87a':'#ff3d5a');});
+  c.beginPath();c.moveTo(pad,getY(pts[0]));pts.forEach((v,i)=>{if(i>0)c.lineTo(pad+i*bw2,getY(v));});
+  c.strokeStyle=lG;c.lineWidth=1.5*dpr;c.stroke();
+  if(minP<0&&maxP>0){c.strokeStyle='rgba(255,255,255,0.15)';c.lineWidth=0.5*dpr;c.setLineDash([4,4]);c.beginPath();c.moveTo(pad,zeroY);c.lineTo(W-pad,zeroY);c.stroke();c.setLineDash([]);}
+  c.fillStyle='rgba(255,255,255,0.2)';c.font=`${9*dpr}px monospace`;c.textAlign='center';
+  if(days.length>0)c.fillText(days[0].slice(5),pad,H2-2);
+  if(days.length>1)c.fillText(days[days.length-1].slice(5),W-pad,H2-2);
+}
+
+// BP chart tooltip
+(function(){
+  const cvs=document.getElementById('bp-canvas');
+  if(!cvs)return;
+  cvs.addEventListener('mousemove',e=>{
+    const tip=document.getElementById('bp-tip');if(!tip)return;
+    if(!window._bpDays||!window._bpDays.length)return;
+    const rect=cvs.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    const y=e.clientY-rect.top;
+    if(x<0||x>rect.width||y<0||y>rect.height){tip.style.display='none';return;}
+    const dpr=window._bpDpr||1;
+    const pad=window._bpPad/dpr||10;
+    const bw=window._bpBw/dpr||1;
+    const days=window._bpDays;
+    const pts=window._bpPts;
+    const i=Math.round((x-pad)/bw);
+    if(i<0||i>=days.length){tip.style.display='none';return;}
+    const cumVal=pts[i];
+    const cumSign=cumVal>=0?'+':'-';
+    const cumColor=cumVal>=0?'#00e87a':'#ff3d5a';
+    const prevVal=i>0?pts[i-1]:0;
+    const dayVal=cumVal-prevVal;
+    const daySign=dayVal>=0?'+':'-';
+    const dayColor=dayVal>=0?'#00e87a':'#ff3d5a';
+    const fmt=v=>'$'+Math.abs(v).toLocaleString('en',{maximumFractionDigits:0});
+    tip.innerHTML=`<span style="color:#8da0b8">${days[i]}</span> <span style="color:${dayColor}">${daySign}${fmt(dayVal)}</span> <span style="color:#4a6380">net:</span><span style="color:${cumColor}"> ${cumSign}${fmt(cumVal)}</span>`;
+    tip.style.display='block';
+    tip.style.left='-9999px';tip.style.top='-9999px';
+    requestAnimationFrame(()=>{
+      const tw=tip.offsetWidth||180;
+      const left=e.clientX+tw+20>window.innerWidth?e.clientX-tw-8:e.clientX+12;
+      tip.style.left=left+'px';
+      tip.style.top=Math.max(10,e.clientY-30)+'px';
+    });
+  });
+  cvs.addEventListener('mouseleave',()=>{const tip=document.getElementById('bp-tip');if(tip)tip.style.display='none';});
+})();
+
+function renderBPStats() {
+  const now    = Date.now();
+  const cutoff = bpDays>=99999 ? new Date(0) : new Date(now - bpDays*86400000);
+  const filtered = bpHistory.filter(o=>o.date>=cutoff);
+
+  let totalIn=0, totalOut=0, txCount=filtered.length;
+  filtered.forEach(op => { if(op.isIn) totalIn+=op.usd; else totalOut+=op.usd; });
+  const net = totalIn - totalOut;
+
+  document.getElementById('bp-in').textContent      = fU2(totalIn);
+  document.getElementById('bp-out').textContent     = fU2(totalOut);
+  document.getElementById('bp-netflow').textContent = (net>=0?'+':'')+fU2(net);
+  document.getElementById('bp-netflow').className   = 'bp-sv '+(net>=0?'pos':'neg');
+  document.getElementById('bp-txcount').textContent = txCount;
+}
+</script>
+
+<div id="bp-tip" style="display:none;position:fixed;background:rgba(2,4,10,0.97);border:1px solid rgba(0,200,255,0.3);padding:6px 10px;border-radius:3px;font-family:monospace;font-size:11px;color:#f0f4fa;pointer-events:none;z-index:99999;white-space:nowrap"></div>
+</body>
+</html>
