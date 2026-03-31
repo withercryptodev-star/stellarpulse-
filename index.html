@@ -23,8 +23,8 @@ body{background:var(--bg);color:var(--white);font-family:var(--sans);-webkit-fon
 nav{position:fixed;top:0;left:0;right:0;z-index:200;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(2,4,10,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--white);font-weight:700;font-size:15px;letter-spacing:-.3px}
 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
-.nav-links{display:flex;gap:4px}
-.nav-link{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray1);text-decoration:none;padding:7px 16px;border-radius:3px;transition:all .15s;border:1px solid transparent}
+.nav-links{display:flex;gap:2px}
+.nav-link{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--gray1);text-decoration:none;padding:6px 10px;border-radius:3px;transition:all .15s;border:1px solid transparent}
 .nav-link:hover{color:var(--white);background:rgba(255,255,255,.05);border-color:var(--edge)}
 .nav-right{display:flex;gap:10px;align-items:center}
 .nav-cta{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 18px;border:1px solid var(--cyan);color:var(--cyan);border-radius:3px;text-decoration:none;transition:all .15s}
@@ -36,11 +36,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;height:60px;display:flex;ali
 #radar-canvas{position:fixed;right:0;top:0;width:55vw;height:100vh;z-index:1;opacity:.55}
 
 /* HERO */
-.hero{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 80px 160px;max-width:780px}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:32px;padding:6px 14px;border:1px solid rgba(0,200,255,.2);border-radius:2px;background:rgba(0,200,255,.04);width:fit-content;opacity:0;animation:fade-up .5s .1s forwards}
+.hero{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:80px 80px 140px;max-width:780px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:20px;padding:6px 14px;border:1px solid rgba(0,200,255,.2);border-radius:2px;background:rgba(0,200,255,.04);width:fit-content;opacity:0;animation:fade-up .5s .1s forwards}
 .hero-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-h1{font-size:clamp(48px,6.5vw,88px);font-weight:800;line-height:.92;letter-spacing:-3px;margin-bottom:28px;opacity:0;animation:fade-up .5s .2s forwards}
+h1{font-size:clamp(40px,5.5vw,72px);font-weight:800;line-height:.92;letter-spacing:-3px;margin-bottom:20px;opacity:0;animation:fade-up .5s .2s forwards}
 h1 .outline{color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.2)}
 h1 .accent{color:var(--cyan)}
 .hero-desc{font-family:var(--mono);font-size:12px;line-height:2;color:var(--gray1);max-width:480px;margin-bottom:48px;opacity:0;animation:fade-up .5s .3s forwards}
@@ -52,7 +52,7 @@ h1 .accent{color:var(--cyan)}
 .btn-secondary:hover{border-color:rgba(255,255,255,.3)}
 
 /* TOOL CARDS */
-.tool-cards{display:flex;gap:10px;flex-wrap:wrap;opacity:0;animation:fade-up .5s .5s forwards}
+.tool-cards{display:flex;gap:8px;flex-wrap:wrap;opacity:0;animation:fade-up .5s .5s forwards;max-width:700px}
 .tool-card{background:rgba(2,4,10,0.75);border:1px solid var(--edge);border-radius:4px;padding:10px 14px;text-decoration:none;color:var(--white);transition:all .2s;backdrop-filter:blur(16px);min-width:110px}
 .tool-card:hover{border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.06);transform:translateY(-2px)}
 .tc-icon{font-size:18px;margin-bottom:6px}
