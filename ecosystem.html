@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StellarMonitor — Ecosystem</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzAyMDQwYSIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGM4ZmYiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiLz4KICA8dGV4dCB4PSIxNiIgeT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIxNyIgZmlsbD0iIzAwYzhmZiI+UzwvdGV4dD4KPC9zdmc+">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#05080d;--panel:#0c1220;--panel2:#0f1628;
+  --edge:rgba(255,255,255,0.07);--edge2:rgba(255,255,255,0.03);
+  --cyan:#00c8ff;--green:#00e87a;--orange:#ff8c00;--red:#ff3d5a;
+  --purple:#a78bfa;--yellow:#fbbf24;
+  --white:#f0f4fa;--gray1:#8da0b8;--gray2:#4a6380;
+  --mono:'DM Mono',monospace;--sans:'Outfit',sans-serif;
+}
+html,body{background:var(--bg);color:var(--white);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(5,8,13,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--white);font-weight:700;font-size:15px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-center{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:1px;white-space:nowrap}
+.nav-link{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray1);text-decoration:none;padding:7px 16px;border-radius:3px;transition:all .15s;border:1px solid transparent}
+.nav-link:hover{color:var(--white);background:rgba(255,255,255,.05);border-color:var(--edge)}
+.nav-link.active{color:var(--cyan);border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.06)}
+.nav-cta{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 18px;border:1px solid var(--cyan);color:var(--cyan);border-radius:3px;text-decoration:none;transition:all .15s}
+.nav-cta:hover{background:var(--cyan);color:var(--bg)}
+.nav-right{display:flex;gap:8px;flex-shrink:0}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;padding-top:56px}
+
+/* SIDEBAR */
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;border-right:1px solid var(--edge);background:rgba(5,8,13,0.5)}
+.sidebar::-webkit-scrollbar{width:2px}
+.sb-sec{padding:14px 16px;border-bottom:1px solid var(--edge2)}
+.sb-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:10px}
+
+/* Stats */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.stat-lbl{font-family:var(--mono);font-size:9px;color:var(--gray2);text-transform:uppercase;letter-spacing:1px}
+.stat-val{font-family:var(--mono);font-size:11px;font-weight:500}
+.cv{color:var(--cyan)}.gv{color:var(--green)}
+
+/* Search */
+.search-wrap{position:relative}
+.search-input{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:8px 12px 8px 30px;font-family:var(--mono);font-size:11px;color:var(--white);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--cyan)}
+.search-input::placeholder{color:var(--gray2)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray2);font-size:12px;pointer-events:none}
+
+/* ── FIX 1: Category checkboxes ── */
+.cat-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;border:1px solid transparent;cursor:pointer;transition:all .15s;user-select:none;margin-bottom:1px}
+.cat-item:hover{background:rgba(255,255,255,.04);border-color:var(--edge)}
+.cat-item.active{background:rgba(0,200,255,.08);border-color:rgba(0,200,255,.25)}
+.cat-left{display:flex;align-items:center;gap:8px}
+/* Custom checkbox box */
+.cat-check{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--gray2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.cat-item.active .cat-check{background:var(--cyan);border-color:var(--cyan)}
+.cat-check svg{display:none;width:9px;height:9px}
+.cat-item.active .cat-check svg{display:block}
+.cat-icon-emoji{font-size:13px;width:18px;text-align:center;line-height:1}
+.cat-lbl{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray1);transition:color .15s}
+.cat-item.active .cat-lbl{color:var(--cyan)}
+.cat-count{font-family:var(--mono);font-size:9px;color:var(--gray2);background:var(--panel2);padding:1px 5px;border-radius:8px}
+.cat-item.active .cat-count{color:var(--cyan)}
+
+/* Sort */
+.sort-btns{display:flex;flex-direction:column;gap:3px}
+.sort-btn{padding:5px 8px;border-radius:3px;border:1px solid var(--edge);background:transparent;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--gray1);text-align:left;transition:all .15s}
+.sort-btn:hover{border-color:rgba(255,255,255,.2);color:var(--white)}
+.sort-btn.active{border-color:rgba(0,200,255,.4);color:var(--cyan);background:rgba(0,200,255,.06)}
+
+/* Status chips */
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:2px;border:1px solid var(--edge);cursor:pointer;color:var(--gray1);transition:all .15s;background:transparent}
+.chip:hover{border-color:rgba(255,255,255,.2);color:var(--white)}
+.chip.active{border-color:var(--green);color:var(--green);background:rgba(0,232,122,.06)}
+
+/* Feature checkboxes */
+.feat-row{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer}
+.feat-row input{accent-color:var(--cyan)}
+.feat-lbl{font-family:var(--mono);font-size:10px;color:var(--gray1)}
+
+/* MAIN */
+.main{padding:20px 28px;min-height:calc(100vh - 56px)}
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.page-title{font-size:22px;font-weight:700;flex-shrink:0}
+.result-count{font-family:var(--mono);font-size:10px;color:var(--gray2)}
+.toolbar-spacer{flex:1}
+.vt-wrap{display:flex;gap:3px;align-items:center}
+.vt-lbl{font-family:var(--mono);font-size:9px;color:var(--gray2);text-transform:uppercase;letter-spacing:1px;margin-right:4px}
+.vt-btn{padding:5px 10px;border:1px solid var(--edge);border-radius:3px;background:transparent;cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--gray1);transition:all .15s}
+.vt-btn:hover{color:var(--white);border-color:rgba(255,255,255,.2)}
+.vt-btn.active{color:var(--cyan);border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.06)}
+
+/* ── GRID ── */
+#grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:10px}
+
+/*
+  FIX 2: card is a <div> not <a> — socials are nested <a> inside,
+  which is valid. Card click handled via JS.
+*/
+.project-card{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:16px 18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;display:block;animation:fadeIn .25s ease forwards}
+.project-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,200,255,.03) 0%,transparent 60%);opacity:0;transition:opacity .2s;pointer-events:none}
+.project-card:hover{border-color:rgba(0,200,255,.3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.project-card:hover::before{opacity:1}
+
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.card-logo{width:34px;height:34px;border-radius:8px;background:var(--panel2);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.card-badges{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-family:var(--mono);font-size:8px;letter-spacing:.3px;padding:2px 6px;border-radius:2px;text-transform:uppercase}
+.b-live{background:rgba(0,232,122,.12);color:var(--green);border:1px solid rgba(0,232,122,.3)}
+.b-beta{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
+.b-new{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.b-audit{background:rgba(0,200,255,.08);color:var(--cyan);border:1px solid rgba(0,200,255,.2)}
+
+.card-name{font-size:14px;font-weight:600;margin-bottom:2px;color:var(--white)}
+.card-cat{font-family:var(--mono);font-size:9px;color:var(--gray2);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.card-desc{font-size:11px;color:var(--gray1);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 0;border-top:1px solid var(--edge2);border-bottom:1px solid var(--edge2);margin-bottom:10px}
+.metric-lbl{font-family:var(--mono);font-size:8px;color:var(--gray2);text-transform:uppercase;letter-spacing:.5px}
+.metric-val{font-family:var(--mono);font-size:11px;color:var(--white);font-weight:500}
+.metric-val.cyan{color:var(--cyan)}
+
+/* Card footer: socials left, chain right */
+.card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-socials{display:flex;gap:5px;align-items:center}
+
+/* Social icon buttons — proper size and alignment */
+.soc-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;border:1px solid var(--edge);background:transparent;text-decoration:none;color:var(--gray1);transition:all .15s;flex-shrink:0}
+.soc-btn:hover{border-color:rgba(255,255,255,.3);color:var(--white);background:rgba(255,255,255,.05)}
+.soc-btn.tw:hover{border-color:rgba(29,155,240,.5);color:#1d9bf0;background:rgba(29,155,240,.08)}
+.soc-btn.dc:hover{border-color:rgba(88,101,242,.5);color:#5865f2;background:rgba(88,101,242,.08)}
+.soc-btn svg{display:block;width:13px;height:13px;flex-shrink:0}
+
+.card-site{font-family:var(--mono);font-size:9px;color:var(--gray2);display:flex;align-items:center;gap:3px;text-decoration:none;transition:color .15s}
+.card-site:hover{color:var(--cyan)}
+.chain-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);display:inline-block;flex-shrink:0}
+
+/* Cat headers in grid */
+.cat-header{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:2px}
+.cat-header-line{flex:1;height:1px;background:var(--edge)}
+.cat-header-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);white-space:nowrap}
+
+/* ── TABLE ── */
+#table-view{display:none}
+.table-wrap{background:var(--panel);border:1px solid var(--edge);border-radius:8px;overflow:hidden}
+.table-head{display:grid;grid-template-columns:28px 32px 2fr 110px 110px 90px 100px;padding:9px 16px;background:var(--panel2);border-bottom:1px solid var(--edge);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);gap:6px;align-items:center}
+.th{cursor:pointer;transition:color .15s;user-select:none}
+.th:hover{color:var(--white)}
+.th.sorted{color:var(--cyan)}
+.tr-main{display:grid;grid-template-columns:28px 32px 2fr 110px 110px 90px 100px;padding:10px 16px;border-bottom:1px solid var(--edge2);align-items:center;gap:6px;cursor:pointer;transition:background .12s}
+.tr-main:hover{background:rgba(0,200,255,.03)}
+.tr-expand-btn{width:22px;height:22px;border-radius:3px;border:1px solid var(--edge);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray2);transition:all .15s;flex-shrink:0;font-family:var(--mono)}
+.tr-expand-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.tr-expand-btn.open{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.08)}
+.tr-links{display:none;padding:8px 16px 10px calc(28px + 32px + 12px + 16px);background:rgba(0,200,255,.02);border-bottom:1px solid var(--edge2);gap:8px;align-items:center;flex-wrap:wrap}
+.tr-links.open{display:flex}
+.tr-link-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:3px;border:1px solid var(--edge);background:transparent;text-decoration:none;font-family:var(--mono);font-size:9px;color:var(--gray1);transition:all .15s}
+.tr-link-btn:hover{color:var(--white);background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.2)}
+.tr-link-btn.site:hover{border-color:rgba(0,200,255,.4);color:var(--cyan);background:rgba(0,200,255,.06)}
+.tr-link-btn.tw:hover{border-color:rgba(29,155,240,.4);color:#1d9bf0;background:rgba(29,155,240,.06)}
+.tr-link-btn.dc:hover{border-color:rgba(88,101,242,.4);color:#5865f2;background:rgba(88,101,242,.06)}
+.tr-link-btn svg{flex-shrink:0;display:block}
+.tr-num{font-family:var(--mono);font-size:10px;color:var(--gray2)}
+.tr-name-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.tr-logo{width:26px;height:26px;border-radius:5px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;border:1px solid var(--edge)}
+.tr-info{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tr-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-cat{font-family:var(--mono);font-size:8px;color:var(--gray2)}
+.tr-val{font-family:var(--mono);font-size:11px;text-align:right}
+.tr-status{display:flex;justify-content:flex-end}
+
+.empty{grid-column:1/-1;padding:60px;text-align:center;color:var(--gray2);font-family:var(--mono);font-size:11px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:none}.nav-center{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo"><div class="logo-dot"></div>StellarMonitor</a>
+  <div class="nav-center">
+    <a href="/feed"      class="nav-link">Live Feed</a>
+    <a href="/scanner"   class="nav-link">Scanner</a>
+    <a href="/graph"     class="nav-link">Graph</a>
+    <a href="/pools"     class="nav-link">Pools</a>
+    <a href="/soroban"   class="nav-link">Soroban</a>
+    <a href="/ecosystem" class="nav-link active">Ecosystem</a>
+    <a href="/docs"      class="nav-link">Docs</a>
+  </div>
+  <div class="nav-right">
+    <a href="https://t.me/stellarmonitor" class="nav-cta" style="border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.06)" target="_blank" rel="noopener">Telegram ↗</a>
+    <a href="https://x.com/StellarMonitor" class="nav-cta" target="_blank" rel="noopener">Follow ↗</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-title">Overview</div>
+      <div class="stat-row"><span class="stat-lbl">Projects</span><span class="stat-val cv" id="st-total">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Live</span><span class="stat-val gv" id="st-live">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Total TVL</span><span class="stat-val" id="st-tvl">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Soroban Native</span><span class="stat-val cv" id="st-sor">—</span></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Search</div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="search" placeholder="Project name..." autocomplete="off" maxlength="50">
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Category · multi-select</div>
+      <div id="cat-list"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Sort By</div>
+      <div class="sort-btns">
+        <button class="sort-btn active" data-sort="name">↑ Name A–Z</button>
+        <button class="sort-btn" data-sort="tvl">↓ TVL</button>
+        <button class="sort-btn" data-sort="launched">↓ Newest First</button>
+        <button class="sort-btn" data-sort="users">↓ Users</button>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Status</div>
+      <div class="chips">
+        <span class="chip active" data-status="all">All</span>
+        <span class="chip" data-status="live">Live</span>
+        <span class="chip" data-status="beta">Beta</span>
+        <span class="chip" data-status="new">New</span>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Features</div>
+      <label class="feat-row"><input type="checkbox" id="f-soroban"><span class="feat-lbl">Soroban Native</span></label>
+      <label class="feat-row"><input type="checkbox" id="f-audited"><span class="feat-lbl">Audited</span></label>
+      <label class="feat-row"><input type="checkbox" id="f-oss"><span class="feat-lbl">Open Source</span></label>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="toolbar">
+      <div class="page-title">Ecosystem</div>
+      <div class="result-count" id="result-count"></div>
+      <div class="toolbar-spacer"></div>
+      <div class="vt-wrap">
+        <span class="vt-lbl">View</span>
+        <button class="vt-btn active" id="btn-grid" onclick="setView('grid')">⊞ Grid</button>
+        <button class="vt-btn" id="btn-table" onclick="setView('table')">≡ Table</button>
+      </div>
+    </div>
+    <div id="grid-view"></div>
+    <div id="table-view">
+      <div class="table-wrap">
+        <div class="table-head">
+          <div></div>
+          <div class="th">#</div>
+          <div class="th sorted" data-col="name" onclick="TS(this)">Project ↑</div>
+          <div class="th" data-col="tvl" onclick="TS(this)" style="text-align:right">TVL</div>
+          <div class="th" data-col="volume24h" onclick="TS(this)" style="text-align:right">24h Vol</div>
+          <div class="th" data-col="users" onclick="TS(this)" style="text-align:right">Users</div>
+          <div class="th" style="text-align:right">Status</div>
+        </div>
+        <div id="table-body"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─── Security ───────────────────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function safeUrl(u){if(!u)return '#';try{const p=new URL(u);return p.protocol==='https:'?esc(u):'#';}catch{return '#';}}
+function fU(n){if(!n&&n!==0)return'—';const a=Math.abs(n),s=n<0?'-':'';if(a>=1e9)return s+'$'+(a/1e9).toFixed(2)+'B';if(a>=1e6)return s+'$'+(a/1e6).toFixed(2)+'M';if(a>=1e3)return s+'$'+(a/1e3).toFixed(0)+'K';return s+'$'+a.toFixed(0);}
+function fN(n){if(!n)return'—';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return String(n);}
+
+// ─── SVG icons ──────────────────────────────────────────────────────────────
+// X (Twitter) icon
+const X_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+
+// Discord icon — official brand path with eyes/detail
+const DC_SVG = `<svg width="13" height="13" viewBox="0 0 127.14 96.36" fill="currentColor" aria-hidden="true"><path d="M107.7 8.07A105.15 105.15 0 0 0 81.47 0a72.06 72.06 0 0 0-3.36 6.83 97.68 97.68 0 0 0-29.11 0A72.37 72.37 0 0 0 45.64 0a105.89 105.89 0 0 0-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0 0 32.17 16.15 77.7 77.7 0 0 0 6.89-11.11 68.42 68.42 0 0 1-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0 0 64.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 0 1-10.87 5.19 77 77 0 0 0 6.89 11.1 105.25 105.25 0 0 0 32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.04 12.69-11.43 12.69z"/></svg>`;
+
+// Website icon
+const SITE_SVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
+
+// Checkmark for category box
+const CHECK_SVG = `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#05080d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,6 4.5,10 11,2"/></svg>`;
+
+// ─── Project data ────────────────────────────────────────────────────────────
+const P=[
+  {id:'aquarius',name:'Aquarius',cat:'DEX',icon:'🌊',desc:'AMM and liquidity protocol on Stellar. AQUA governance, deep pools and DAO-based rewards.',url:'https://aqua.network',tw:'https://x.com/aqua_token',dc:'https://discord.gg/sgzFscHp4C',tvl:42000000,vol:8500000,users:12000,launched:'2022-01',status:'live',soroban:true,audited:true,oss:true},
+  {id:'soroswap',name:'Soroswap',cat:'DEX',icon:'🔄',desc:'First native Soroban DEX aggregator with automated liquidity pools and best-price routing.',url:'https://soroswap.finance',tw:'https://x.com/SoroswapFinance',dc:'https://discord.gg/A2rQ3cm9XG',tvl:8200000,vol:1200000,users:3400,launched:'2024-02',status:'live',soroban:true,audited:false,oss:true},
+  {id:'phoenix',name:'Phoenix DeFi Hub',cat:'DEX',icon:'🔥',desc:'Multi-protocol DeFi hub on Soroban — DEX, NFT marketplace and yield products.',url:'https://phoenix-hub.io',tw:'https://x.com/PhoenixDeFiHub',dc:null,tvl:5100000,vol:900000,users:2100,launched:'2024-05',status:'live',soroban:true,audited:true,oss:true},
+  {id:'sdex',name:'Stellar DEX',cat:'DEX',icon:'⭐',desc:'Native on-chain order book exchange built into Stellar. Oldest and most liquid venue.',url:'https://stellar.org',tw:'https://x.com/StellarOrg',dc:'https://discord.gg/stellar',tvl:0,vol:45000000,users:85000,launched:'2015-11',status:'live',soroban:false,audited:true,oss:true},
+  {id:'blend',name:'Blend Capital',cat:'DeFi',icon:'💰',desc:'Permissionless lending protocol on Soroban. Deploy custom lending pools with automatic risk management.',url:'https://blend.capital',tw:'https://x.com/blend_capital',dc:'https://discord.gg/v2DPBwRyKB',tvl:18500000,vol:2100000,users:4200,launched:'2024-01',status:'live',soroban:true,audited:true,oss:true},
+  {id:'yieldblox',name:'YieldBlox',cat:'DeFi',icon:'📈',desc:'Pioneer permissionless lending protocol on Stellar, now migrating core logic to Soroban.',url:'https://yieldblox.finance',tw:'https://x.com/yieldblox',dc:null,tvl:3200000,vol:450000,users:1800,launched:'2022-06',status:'live',soroban:false,audited:true,oss:true},
+  {id:'pendulum',name:'Pendulum',cat:'DeFi',icon:'🌐',desc:'Connecting Stellar and Polkadot via forex-pegged stablecoins and regulated fiat tokens.',url:'https://pendulumchain.org',tw:'https://x.com/pendulum_chain',dc:'https://discord.gg/wJ2fQh776d',tvl:12000000,vol:1800000,users:6500,launched:'2023-04',status:'live',soroban:false,audited:true,oss:true},
+  {id:'stellar-expert',name:'Stellar.Expert',cat:'Infrastructure',icon:'🔭',desc:'Comprehensive block explorer for Stellar. Tracks all transactions, assets and Soroban contracts.',url:'https://stellar.expert',tw:'https://x.com/stellarexpert',dc:null,tvl:0,vol:0,users:80000,launched:'2018-02',status:'live',soroban:true,audited:false,oss:false},
+  {id:'mercury',name:'Mercury',cat:'Infrastructure',icon:'☿',desc:'Indexing and data layer for Stellar and Soroban. Real-time events and historical data API.',url:'https://mercurydata.app',tw:'https://x.com/MercuryStellar',dc:'https://discord.gg/rH3ZkNAVWq',tvl:0,vol:0,users:500,launched:'2024-06',status:'beta',soroban:true,audited:false,oss:true},
+  {id:'stellarmonitor',name:'StellarMonitor',cat:'Infrastructure',icon:'📡',desc:'Real-time on-chain intelligence. Whale movements, SDEX trades, Soroban events and wallet scoring.',url:'https://stellarmonitor.xyz',tw:'https://x.com/StellarMonitor',dc:null,tvl:0,vol:0,users:2500,launched:'2024-12',status:'live',soroban:true,audited:false,oss:false},
+  {id:'soroban-rpc',name:'Soroban RPC',cat:'Infrastructure',icon:'🔌',desc:'Official RPC node infrastructure for Soroban smart contracts. Maintained by SDF.',url:'https://developers.stellar.org',tw:'https://x.com/StellarOrg',dc:'https://discord.gg/stellar',tvl:0,vol:0,users:5000,launched:'2024-01',status:'live',soroban:true,audited:true,oss:true},
+  {id:'lobstr',name:'LOBSTR Wallet',cat:'Wallets',icon:'🦞',desc:'Most popular Stellar wallet — 500K+ users. Mobile-first with DEX trading and fiat ramps.',url:'https://lobstr.co',tw:'https://x.com/lobstrco',dc:null,tvl:0,vol:0,users:500000,launched:'2016-08',status:'live',soroban:true,audited:false,oss:false},
+  {id:'freighter',name:'Freighter',cat:'Wallets',icon:'🚀',desc:'Official browser extension wallet for Stellar and Soroban by SDF. Full dApp support.',url:'https://www.freighter.app',tw:'https://x.com/FreighterApp',dc:'https://discord.gg/stellar',tvl:0,vol:0,users:45000,launched:'2021-05',status:'live',soroban:true,audited:true,oss:true},
+  {id:'solar',name:'Solar Wallet',cat:'Wallets',icon:'☀️',desc:'Feature-rich Stellar wallet with multisig, DEX trading and mobile apps.',url:'https://solarwallet.io',tw:'https://x.com/SolarWalletApp',dc:null,tvl:0,vol:0,users:28000,launched:'2019-11',status:'live',soroban:false,audited:false,oss:true},
+  {id:'rabet',name:'Rabet',cat:'Wallets',icon:'🐇',desc:'Lightweight browser extension wallet for Stellar with dApp browser support.',url:'https://rabet.io',tw:'https://x.com/rabet_io',dc:'https://discord.gg/rabet',tvl:0,vol:0,users:15000,launched:'2020-09',status:'live',soroban:true,audited:false,oss:false},
+  {id:'usdc',name:'USDC on Stellar',cat:'Stablecoins',icon:'💵',desc:'Circle USDC natively issued on Stellar. Lowest fees globally for transfers and DeFi.',url:'https://www.circle.com/usdc',tw:'https://x.com/circle',dc:null,tvl:350000000,vol:120000000,users:200000,launched:'2021-09',status:'live',soroban:false,audited:true,oss:false},
+  {id:'eurc',name:'EURC',cat:'Stablecoins',icon:'💶',desc:'Circle Euro Coin on Stellar. Regulated euro stablecoin with 100% reserve backing.',url:'https://www.circle.com/eurc',tw:'https://x.com/circle',dc:null,tvl:28000000,vol:8000000,users:15000,launched:'2023-06',status:'live',soroban:false,audited:true,oss:false},
+  {id:'rlusd',name:'RLUSD',cat:'Stablecoins',icon:'🏦',desc:'Ripple USD on Stellar and XRPL. Backed 1:1 by US dollars and US government bonds.',url:'https://ripple.com/rlusd',tw:'https://x.com/Ripple',dc:null,tvl:85000000,vol:25000000,users:30000,launched:'2024-12',status:'live',soroban:false,audited:true,oss:false},
+  {id:'allbridge',name:'Allbridge',cat:'Bridge',icon:'🌉',desc:'Cross-chain bridge: Stellar ↔ Ethereum, BSC, Solana and 15+ networks.',url:'https://allbridge.io',tw:'https://x.com/Allbridge_io',dc:'https://discord.gg/allbridge',tvl:45000000,vol:5000000,users:35000,launched:'2021-12',status:'live',soroban:false,audited:true,oss:false},
+  {id:'debridge',name:'deBridge',cat:'Bridge',icon:'🔗',desc:'Cross-chain interoperability connecting Stellar to major EVM chains.',url:'https://debridge.finance',tw:'https://x.com/deBridgeFinance',dc:'https://discord.gg/debridge',tvl:0,vol:12000000,users:18000,launched:'2022-04',status:'live',soroban:false,audited:true,oss:true},
+  {id:'stellarx',name:'StellarX',cat:'Trading',icon:'📊',desc:'Advanced DEX trading interface for Stellar order book with professional order management.',url:'https://stellarx.com',tw:'https://x.com/StellarXDEX',dc:null,tvl:0,vol:15000000,users:22000,launched:'2018-09',status:'live',soroban:false,audited:false,oss:false},
+  {id:'scopuly',name:'Scopuly',cat:'Trading',icon:'📉',desc:'DeFi platform combining DEX trading, staking and liquidity on Stellar.',url:'https://scopuly.com',tw:'https://x.com/scopuly',dc:'https://discord.gg/scopuly',tvl:2100000,vol:800000,users:8500,launched:'2020-03',status:'live',soroban:false,audited:false,oss:false},
+  {id:'interstellar',name:'Interstellar Exchange',cat:'Trading',icon:'🌌',desc:'Advanced charting, limit orders and portfolio tracking for Stellar assets.',url:'https://interstellar.exchange',tw:'https://x.com/IntStellar',dc:null,tvl:0,vol:1200000,users:5000,launched:'2019-07',status:'live',soroban:false,audited:false,oss:false},
+  {id:'stellar-sdk',name:'Stellar SDK',cat:'Dev Tools',icon:'🛠️',desc:'Official JS, Python, Java and Go SDKs for building on Stellar and Soroban.',url:'https://developers.stellar.org',tw:'https://x.com/StellarOrg',dc:'https://discord.gg/stellar',tvl:0,vol:0,users:15000,launched:'2015-11',status:'live',soroban:true,audited:true,oss:true},
+  {id:'soroban-tools',name:'Soroban Tools',cat:'Dev Tools',icon:'⚙️',desc:'CLI, testing framework and deployment tools for Soroban smart contracts by SDF.',url:'https://soroban.stellar.org',tw:'https://x.com/SorobanOfficial',dc:'https://discord.gg/stellar',tvl:0,vol:0,users:3000,launched:'2024-01',status:'live',soroban:true,audited:true,oss:true},
+];
+
+const CATS=[
+  {id:'all',label:'All Projects',icon:'✦'},
+  {id:'DEX',label:'DEX',icon:'🔄'},
+  {id:'DeFi',label:'DeFi',icon:'🏦'},
+  {id:'Infrastructure',label:'Infrastructure',icon:'⚙️'},
+  {id:'Wallets',label:'Wallets',icon:'👛'},
+  {id:'Stablecoins',label:'Stablecoins',icon:'💵'},
+  {id:'Bridge',label:'Bridges',icon:'🌉'},
+  {id:'Trading',label:'Trading',icon:'📊'},
+  {id:'Dev Tools',label:'Dev Tools',icon:'🛠️'},
+];
+
+// ─── State ───────────────────────────────────────────────────────────────────
+const S={
+  search:'',
+  activeCats:new Set(['all']),  // multi-select Set
+  sort:'name',
+  status:'all',
+  soroban:false, audited:false, oss:false,
+  view:'grid',
+  tCol:'name', tDir:1
+};
+
+// ─── Filter ──────────────────────────────────────────────────────────────────
+function applyFilters(){
+  let l=[...P];
+  if(S.search){
+    const q=S.search.toLowerCase();
+    l=l.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q));
+  }
+  if(!S.activeCats.has('all')&&S.activeCats.size>0){
+    l=l.filter(p=>S.activeCats.has(p.cat));
+  }
+  if(S.status!=='all') l=l.filter(p=>p.status===S.status);
+  if(S.soroban) l=l.filter(p=>p.soroban);
+  if(S.audited) l=l.filter(p=>p.audited);
+  if(S.oss) l=l.filter(p=>p.oss);
+  l.sort((a,b)=>{
+    if(S.sort==='tvl')     return (b.tvl||0)-(a.tvl||0);
+    if(S.sort==='launched')return b.launched.localeCompare(a.launched);
+    if(S.sort==='users')   return (b.users||0)-(a.users||0);
+    return a.name.localeCompare(b.name);
+  });
+  return l;
+}
+
+// ─── Badge html ──────────────────────────────────────────────────────────────
+function badges(p){
+  let h=p.status==='live'?'<span class="badge b-live">Live</span>':p.status==='beta'?'<span class="badge b-beta">Beta</span>':'<span class="badge b-new">New</span>';
+  if(p.audited) h+='<span class="badge b-audit">Audited</span>';
+  return h;
+}
+
+// ─── GRID render ─────────────────────────────────────────────────────────────
+// FIX: card is <div> not <a>, so nested <a> socials are valid HTML
+function renderGrid(list){
+  const el=document.getElementById('grid-view');
+  if(!list.length){el.innerHTML='<div class="empty">No projects match your filters</div>';return;}
+  const grouped=S.activeCats.has('all')&&S.sort==='name';
+  const sorted=grouped?[...list].sort((a,b)=>a.cat.localeCompare(b.cat)||a.name.localeCompare(b.name)):list;
+  let html='', lastCat=null;
+  sorted.forEach(p=>{
+    if(grouped&&p.cat!==lastCat){
+      lastCat=p.cat;
+      html+=`<div class="cat-header"><div class="cat-header-line"></div><span class="cat-header-lbl">${esc(p.cat)}</span><div class="cat-header-line"></div></div>`;
+    }
+    // Metrics: pick 2 most relevant
+    const m=[];
+    if(p.tvl)    m.push(`<div><div class="metric-lbl">TVL</div><div class="metric-val">${fU(p.tvl)}</div></div>`);
+    if(p.vol)    m.push(`<div><div class="metric-lbl">24h Vol</div><div class="metric-val">${fU(p.vol)}</div></div>`);
+    if(p.users)  m.push(`<div><div class="metric-lbl">Users</div><div class="metric-val">${fN(p.users)}</div></div>`);
+    if(p.soroban)m.push(`<div><div class="metric-lbl">Network</div><div class="metric-val cyan">Soroban ✓</div></div>`);
+    const metrics=m.slice(0,2).join('');
+
+    // Social buttons inside card
+    const twBtn=p.tw?`<a href="${safeUrl(p.tw)}" class="soc-btn tw" target="_blank" rel="noopener" title="Twitter/X">${X_SVG}</a>`:'';
+    const dcBtn=p.dc?`<a href="${safeUrl(p.dc)}" class="soc-btn dc" target="_blank" rel="noopener" title="Discord">${DC_SVG}</a>`:'';
+
+    html+=`<div class="project-card" onclick="window.open('${safeUrl(p.url)}','_blank','noopener')" role="link" tabindex="0" aria-label="${esc(p.name)}">
+  <div class="card-top"><div class="card-logo">${esc(p.icon)}</div><div class="card-badges">${badges(p)}</div></div>
+  <div class="card-name">${esc(p.name)}</div>
+  <div class="card-cat">${esc(p.cat)}</div>
+  <div class="card-desc">${esc(p.desc)}</div>
+  ${metrics?`<div class="card-metrics">${metrics}</div>`:''}
+  <div class="card-footer">
+    <div class="card-socials">${twBtn}${dcBtn}</div>
+    <a href="${safeUrl(p.url)}" class="card-site" target="_blank" rel="noopener" title="Website">
+      <span class="chain-dot"></span>Visit ↗
+    </a>
+  </div>
+</div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ─── TABLE render ─────────────────────────────────────────────────────────────
+function renderTable(list){
+  const el=document.getElementById('table-body');
+  if(!list.length){el.innerHTML='<div class="empty">No projects match</div>';return;}
+  el.innerHTML=list.map((p,i)=>{
+    const twLink=p.tw?`<a href="${safeUrl(p.tw)}" class="tr-link-btn tw" target="_blank" rel="noopener">${X_SVG} Twitter</a>`:'';
+    const dcLink=p.dc?`<a href="${safeUrl(p.dc)}" class="tr-link-btn dc" target="_blank" rel="noopener">${DC_SVG} Discord</a>`:'';
+    const siteLink=`<a href="${safeUrl(p.url)}" class="tr-link-btn site" target="_blank" rel="noopener">${SITE_SVG} Website</a>`;
+    const st=p.status==='live'?'<span class="badge b-live">Live</span>':p.status==='beta'?'<span class="badge b-beta">Beta</span>':'<span class="badge b-new">New</span>';
+    return `<div id="trw-${esc(p.id)}">
+  <div class="tr-main">
+    <button class="tr-expand-btn" id="btn-${esc(p.id)}" onclick="toggleRow('${esc(p.id)}')" title="Show links">▶</button>
+    <div class="tr-num">${i+1}</div>
+    <div class="tr-name-wrap">
+      <div class="tr-logo">${esc(p.icon)}</div>
+      <div class="tr-info">
+        <div class="tr-name">${esc(p.name)}</div>
+        <div class="tr-cat">${esc(p.cat)}</div>
+      </div>
+    </div>
+    <div class="tr-val" style="text-align:right">${fU(p.tvl)}</div>
+    <div class="tr-val" style="text-align:right">${fU(p.vol)}</div>
+    <div class="tr-val" style="text-align:right">${fN(p.users)}</div>
+    <div class="tr-status">${st}</div>
+  </div>
+  <div class="tr-links" id="trl-${esc(p.id)}">${siteLink}${twLink}${dcLink}</div>
+</div>`;
+  }).join('');
+}
+
+function toggleRow(id){
+  const btn=document.getElementById('btn-'+id);
+  const row=document.getElementById('trl-'+id);
+  if(!btn||!row)return;
+  const open=row.classList.toggle('open');
+  btn.classList.toggle('open',open);
+  btn.textContent=open?'▼':'▶';
+}
+
+// ─── SIDEBAR: categories (multi-select) ─────────────────────────────────────
+function renderCats(){
+  const el=document.getElementById('cat-list');
+  const counts={};
+  P.forEach(p=>{counts[p.cat]=(counts[p.cat]||0)+1;});
+  el.innerHTML=CATS.map(c=>{
+    const n=c.id==='all'?P.length:(counts[c.id]||0);
+    const active=S.activeCats.has(c.id);
+    return `<div class="cat-item${active?' active':''}" data-cat="${esc(c.id)}">
+  <div class="cat-left">
+    <div class="cat-check">${active?CHECK_SVG:''}</div>
+    <span class="cat-icon-emoji">${esc(c.icon)}</span>
+    <span class="cat-lbl">${esc(c.label)}</span>
+  </div>
+  <span class="cat-count">${n}</span>
+</div>`;
+  }).join('');
+  el.querySelectorAll('.cat-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      const cat=item.dataset.cat;
+      if(cat==='all'){
+        S.activeCats=new Set(['all']);
+      } else {
+        S.activeCats.delete('all');
+        if(S.activeCats.has(cat)){
+          S.activeCats.delete(cat);
+          if(S.activeCats.size===0) S.activeCats.add('all');
+        } else {
+          S.activeCats.add(cat);
+        }
+      }
+      render();
+    });
+  });
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function renderStats(list){
+  document.getElementById('st-total').textContent=P.length;
+  document.getElementById('st-live').textContent=P.filter(p=>p.status==='live').length;
+  document.getElementById('st-tvl').textContent=fU(P.reduce((s,p)=>s+(p.tvl||0),0));
+  document.getElementById('st-sor').textContent=P.filter(p=>p.soroban).length;
+  document.getElementById('result-count').textContent=`${list.length} project${list.length!==1?'s':''}`;
+}
+
+// ─── Main render ─────────────────────────────────────────────────────────────
+function render(){
+  const list=applyFilters();
+  renderStats(list);
+  renderCats();
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.toggle('active',b.dataset.sort===S.sort));
+  document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active',b.dataset.status===S.status));
+  S.view==='grid'?renderGrid(list):renderTable(list);
+}
+
+function setView(v){
+  S.view=v;
+  document.getElementById('grid-view').style.display=v==='grid'?'grid':'none';
+  document.getElementById('table-view').style.display=v==='table'?'block':'none';
+  document.getElementById('btn-grid').classList.toggle('active',v==='grid');
+  document.getElementById('btn-table').classList.toggle('active',v==='table');
+  render();
+}
+
+function TS(th){
+  document.querySelectorAll('.th').forEach(t=>t.classList.remove('sorted'));
+  th.classList.add('sorted');
+  const col=th.dataset.col;
+  if(S.tCol===col)S.tDir*=-1;else{S.tCol=col;S.tDir=-1;}
+  S.sort={name:'name',tvl:'tvl',volume24h:'tvl',users:'users'}[col]||'name';
+  render();
+}
+
+// ─── Event listeners ─────────────────────────────────────────────────────────
+let st;
+document.getElementById('search').addEventListener('input',e=>{
+  clearTimeout(st);
+  st=setTimeout(()=>{S.search=e.target.value.replace(/[<>"'`]/g,'').slice(0,50);render();},150);
+});
+document.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',()=>{S.sort=b.dataset.sort;render();}));
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{S.status=c.dataset.status;render();}));
+document.getElementById('f-soroban').addEventListener('change',e=>{S.soroban=e.target.checked;render();});
+document.getElementById('f-audited').addEventListener('change',e=>{S.audited=e.target.checked;render();});
+document.getElementById('f-oss').addEventListener('change',e=>{S.oss=e.target.checked;render();});
+
+// Keyboard accessibility for cards
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.classList.contains('project-card')) e.target.click();
+});
+
+render();
+setView('grid');
+</script>
+</body>
+</html>
