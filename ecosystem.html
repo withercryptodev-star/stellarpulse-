@@ -230,34 +230,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;height:56px;display:flex;ali
         <button class="sort-btn" data-sort="users">↓ Users</button>
       </div>
     </div>
-    <div class="sb-sec">
-      <div class="sb-title">Status</div>
-      <div class="chips">
-        <span class="chip active" data-status="all">All</span>
-        <span class="chip" data-status="live">Live</span>
-        <span class="chip" data-status="beta">Beta</span>
-        <span class="chip" data-status="new">New</span>
-      </div>
-    </div>
-    <div class="sb-sec">
-      <div class="sb-title">Features</div>
-      <label class="feat-row"><input type="checkbox" id="f-soroban"><span class="feat-lbl">Soroban Native</span></label>
-      <label class="feat-row"><input type="checkbox" id="f-audited"><span class="feat-lbl">Audited</span></label>
-      <label class="feat-row"><input type="checkbox" id="f-oss"><span class="feat-lbl">Open Source</span></label>
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="toolbar">
-      <div class="page-title">Ecosystem</div>
-      <div class="result-count" id="result-count"></div>
-      <div class="toolbar-spacer"></div>
-      <div class="vt-wrap">
-        <span class="vt-lbl">View</span>
-        <button class="vt-btn active" id="btn-grid" onclick="setView('grid')">⊞ Grid</button>
-        <button class="vt-btn" id="btn-table" onclick="setView('table')">≡ Table</button>
-      </div>
-    </div>
+    
+    
     <div id="grid-view"></div>
     <div id="table-view">
       <div class="table-wrap">
@@ -305,9 +279,9 @@ const P=[
   {id:'blend',name:'Blend Capital',cat:'DeFi',icon:'💰',desc:'Permissionless lending protocol on Soroban by Script3. $79.9M TVL (7.8x YoY growth). Integrated by Meru, Beans, DeFindex.',url:'https://blend.capital',tw:'https://x.com/blend_capital',dc:'https://discord.gg/v2DPBwRyKB',tvl:79900000,vol:2100000,users:4200,launched:'2024-01',status:'live',soroban:true,audited:true,oss:true,trust:'verified'},
   {id:'yieldblox',name:'YieldBlox',cat:'DeFi',icon:'📈',desc:'Pioneer permissionless lending protocol on Stellar, now migrating core logic to Soroban.',url:'https://yieldblox.finance',tw:'https://x.com/yieldblox',dc:null,tvl:3200000,vol:450000,users:1800,launched:'2022-06',status:'live',soroban:false,audited:true,oss:true,trust:'medium'},
   {id:'pendulum',name:'Pendulum',cat:'DeFi',icon:'🌐',desc:'Connecting Stellar and Polkadot via forex-pegged stablecoins and regulated fiat tokens.',url:'https://pendulumchain.org',tw:'https://x.com/pendulum_chain',dc:'https://discord.gg/wJ2fQh776d',tvl:12000000,vol:1800000,users:6500,launched:'2023-04',status:'live',soroban:false,audited:true,oss:true,trust:'medium'},
-  {id:'stellar-expert',name:'Stellar.Expert',cat:'Infrastructure',icon:'🔭',desc:'Comprehensive block explorer for Stellar. Tracks all transactions, assets and Soroban contracts.',url:'https://stellar.expert',tw:'https://x.com/stellarexpert',dc:null,tvl:0,vol:0,users:80000,launched:'2018-02',status:'live',soroban:true,audited:false,oss:false,trust:'high'},
+  {id:'stellar-expert',name:'Stellar.Expert',cat:'Infrastructure',icon:'🔭',desc:'Comprehensive block explorer for Stellar. Tracks all transactions, assets and Soroban contracts.',url:'https://stellar.expert',tw:'https://x.com/stellarexpert',dc:null,tvl:0,vol:0,users:80000,launched:'2018-02',status:'live',soroban:true,audited:false,oss:false,trust:'medium'},
   {id:'mercury',name:'Mercury',cat:'Infrastructure',icon:'☿',desc:'Indexing and data layer for Stellar and Soroban. Real-time events and historical data API.',url:'https://mercurydata.app',tw:'https://x.com/MercuryStellar',dc:'https://discord.gg/rH3ZkNAVWq',tvl:0,vol:0,users:500,launched:'2024-06',status:'beta',soroban:true,audited:false,oss:true,trust:'medium'},
-  {id:'stellarmonitor',name:'StellarMonitor',cat:'Infrastructure',icon:'📡',desc:'Real-time on-chain intelligence. Whale movements, SDEX trades, Soroban events and wallet scoring.',url:'https://stellarmonitor.xyz',tw:'https://x.com/StellarMonitor',dc:null,tvl:0,vol:0,users:2500,launched:'2024-12',status:'live',soroban:true,audited:false,oss:false,trust:'high'},
+  {id:'stellarmonitor',name:'StellarMonitor',cat:'Infrastructure',icon:'📡',desc:'Real-time on-chain intelligence. Whale movements, SDEX trades, Soroban events and wallet scoring.',url:'https://stellarmonitor.xyz',tw:'https://x.com/StellarMonitor',dc:null,tvl:0,vol:0,users:2500,launched:'2024-12',status:'live',soroban:true,audited:false,oss:false,trust:'medium'},
   {id:'soroban-rpc',name:'Soroban RPC',cat:'Infrastructure',icon:'🔌',desc:'Official RPC node infrastructure for Soroban smart contracts. Maintained by SDF.',url:'https://developers.stellar.org',tw:'https://x.com/StellarOrg',dc:'https://discord.gg/stellar',tvl:0,vol:0,users:5000,launched:'2024-01',status:'live',soroban:true,audited:true,oss:true,trust:'verified'},
   {id:'lobstr',name:'LOBSTR Wallet',cat:'Wallets',icon:'🦞',desc:'Most popular Stellar wallet — 500K+ users. Mobile-first with DEX trading and fiat ramps.',url:'https://lobstr.co',tw:'https://x.com/lobstrco',dc:null,tvl:0,vol:0,users:500000,launched:'2016-08',status:'live',soroban:true,audited:false,oss:false,trust:'verified'},
   {id:'freighter',name:'Freighter',cat:'Wallets',icon:'🚀',desc:'Official browser extension wallet for Stellar and Soroban by SDF. Full dApp support.',url:'https://www.freighter.app',tw:'https://x.com/FreighterApp',dc:'https://discord.gg/stellar',tvl:0,vol:0,users:45000,launched:'2021-05',status:'live',soroban:true,audited:true,oss:true,trust:'verified'},
@@ -341,8 +315,7 @@ const S={
   search:'',
   activeCats:new Set(['all']),  // multi-select Set
   sort:'tvl',
-  status:'all',
-  soroban:false, audited:false, oss:false,
+
   view:'grid',
   tCol:'name', tDir:1
 };
@@ -357,11 +330,7 @@ function applyFilters(){
   if(!S.activeCats.has('all')&&S.activeCats.size>0){
     l=l.filter(p=>S.activeCats.has(p.cat));
   }
-  if(S.status!=='all') l=l.filter(p=>p.status===S.status);
-  if(S.soroban) l=l.filter(p=>p.soroban);
-  if(S.audited) l=l.filter(p=>p.audited);
-  if(S.oss) l=l.filter(p=>p.oss);
-  l.sort((a,b)=>{
+          l.sort((a,b)=>{
     if(S.sort==='tvl')     return (b.tvl||0)-(a.tvl||0);
     if(S.sort==='launched')return b.launched.localeCompare(a.launched);
     if(S.sort==='users')   return (b.users||0)-(a.users||0);
@@ -373,7 +342,7 @@ function applyFilters(){
 // ─── Badge html ──────────────────────────────────────────────────────────────
 function badges(p){
   let h=p.status==='live'?'<span class="badge b-live">Live</span>':p.status==='beta'?'<span class="badge b-beta">Beta</span>':'<span class="badge b-new">New</span>';
-  if(p.trust==='verified') h+='<span class="badge b-verified">✓ Verified</span>';
+  if(p.trust==='verified') h+='<span class="badge b-verified" title="Followed and endorsed by @StellarOrg on Twitter">✓ Verified</span>';
   else if(p.audited) h+='<span class="badge b-audit">Audited</span>';
   else if(p.trust==='caution') h+='<span class="badge b-caution">⚠ Caution</span>';
   return h;
@@ -511,39 +480,9 @@ function render(){
   renderStats(list);
   renderCats();
   document.querySelectorAll('.sort-btn').forEach(b=>b.classList.toggle('active',b.dataset.sort===S.sort));
-  document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active',b.dataset.status===S.status));
-  S.view==='grid'?renderGrid(list):renderTable(list);
-}
+  
 
-function setView(v){
-  S.view=v;
-  document.getElementById('grid-view').style.display=v==='grid'?'grid':'none';
-  document.getElementById('table-view').style.display=v==='table'?'block':'none';
-  document.getElementById('btn-grid').classList.toggle('active',v==='grid');
-  document.getElementById('btn-table').classList.toggle('active',v==='table');
-  render();
-}
 
-function TS(th){
-  document.querySelectorAll('.th').forEach(t=>t.classList.remove('sorted'));
-  th.classList.add('sorted');
-  const col=th.dataset.col;
-  if(S.tCol===col)S.tDir*=-1;else{S.tCol=col;S.tDir=-1;}
-  S.sort={name:'name',tvl:'tvl',volume24h:'tvl',users:'users'}[col]||'name';
-  render();
-}
-
-// ─── Event listeners ─────────────────────────────────────────────────────────
-let st;
-document.getElementById('search').addEventListener('input',e=>{
-  clearTimeout(st);
-  st=setTimeout(()=>{S.search=e.target.value.replace(/[<>"'`]/g,'').slice(0,50);render();},150);
-});
-document.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',()=>{S.sort=b.dataset.sort;render();}));
-document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{S.status=c.dataset.status;render();}));
-document.getElementById('f-soroban').addEventListener('change',e=>{S.soroban=e.target.checked;render();});
-document.getElementById('f-audited').addEventListener('change',e=>{S.audited=e.target.checked;render();});
-document.getElementById('f-oss').addEventListener('change',e=>{S.oss=e.target.checked;render();});
 
 // Keyboard accessibility for cards
 document.addEventListener('keydown',e=>{
