@@ -365,6 +365,21 @@ function badges(p){
   return h;
 }
 
+
+// Custom favicon resolver — override for domains not indexed by Google
+const FAVICON_OVERRIDE={
+  'stellarmonitor.xyz':'https://stellarmonitor.xyz/favicon.ico',
+  'decaf.so':'https://www.decaf.so/favicon.ico',
+  'phoenix-hub.io':'https://phoenix-hub.io/favicon.ico',
+};
+function getFavicon(p){
+  try{
+    const host=new URL(p.url).hostname;
+    if(FAVICON_OVERRIDE[host]) return FAVICON_OVERRIDE[host];
+    return 'https://www.google.com/s2/favicons?domain='+host+'&sz=64';
+  }catch{return '';}
+}
+
 // ─── GRID render ─────────────────────────────────────────────────────────────
 // FIX: card is <div> not <a>, so nested <a> socials are valid HTML
 function renderGrid(list){
