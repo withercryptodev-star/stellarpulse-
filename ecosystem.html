@@ -382,7 +382,7 @@ function renderGrid(list){
     if(p.tvl)    m.push(`<div><div class="metric-lbl">TVL</div><div class="metric-val">${fU(p.tvl)}</div></div>`);
     if(p.vol)    m.push(`<div><div class="metric-lbl">24h Vol</div><div class="metric-val">${fU(p.vol)}</div></div>`);
     if(p.users)  m.push(`<div><div class="metric-lbl">Users</div><div class="metric-val">${fN(p.users)}</div></div>`);
-    if(p.soroban)m.push(`<div><div class="metric-lbl">Network</div><div class="metric-val cyan">Soroban ✓</div></div>`);
+
     const metrics=m.slice(0,2).join('');
 
     // Social buttons inside card
