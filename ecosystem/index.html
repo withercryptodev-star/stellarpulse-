@@ -355,10 +355,11 @@ function applyFilters(){
 
 // ─── Badge html ──────────────────────────────────────────────────────────────
 function badges(p){
+  if(p.trust==='verified'){
+    return '<span class="badge b-verified" title="Followed by @StellarOrg or @BuildOnStellar on Twitter">\u2713 Verified</span>';
+  }
   let h=p.status==='live'?'<span class="badge b-live">Live</span>':p.status==='beta'?'<span class="badge b-beta">Beta</span>':'<span class="badge b-new">New</span>';
-  if(p.trust==='verified') h+='<span class="badge b-verified" title="Followed by @StellarOrg or @BuildOnStellar on Twitter">✓ Verified</span>';
-  else if(p.audited) h+='<span class="badge b-audit">Audited</span>';
-  else if(p.trust==='caution') h+='<span class="badge b-caution">⚠ Caution</span>';
+  if(p.audited) h+='<span class="badge b-audit">Audited</span>';
   return h;
 }
 
