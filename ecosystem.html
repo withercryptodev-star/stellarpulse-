@@ -408,7 +408,7 @@ function renderGrid(list){
     const dcBtn=p.dc?`<a href="${safeUrl(p.dc)}" class="soc-btn dc" target="_blank" rel="noopener" title="Discord" onclick="event.stopPropagation()">${DC_SVG}</a>`:'';
 
     html+=`<div class="project-card" onclick="window.open('${safeUrl(p.url)}','_blank','noopener')" role="link" tabindex="0" aria-label="${esc(p.name)}">
-  <div class="card-top"><div class="card-logo"><img src="https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=32" width="28" height="28" style="border-radius:6px;object-fit:cover" onerror="this.style.display='none';this.nextSibling.style.display='block'" alt=""><span style="display:none;font-size:17px">${esc(p.icon)}</span></div><div class="card-badges">${badges(p)}</div></div>
+  <div class="card-top"><div class="card-logo">${getFaviconHtml(p,28)}</div><div class="card-badges">${badges(p)}</div></div>
   <div class="card-name">${esc(p.name)}</div>
   <div class="card-cat">${esc(p.cat)}</div>
   <div class="card-desc">${esc(p.desc)}</div>
@@ -438,7 +438,7 @@ function renderTable(list){
     <button class="tr-expand-btn" id="btn-${esc(p.id)}" onclick="event.stopPropagation();toggleRow('${esc(p.id)}')" title="Show links">▶</button>
     <div class="tr-num">${i+1}</div>
     <div class="tr-name-wrap">
-      <div class="tr-logo"><img src="https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=32" width="20" height="20" style="border-radius:4px;object-fit:cover" onerror="this.style.display='none';this.nextSibling.style.display='block'" alt=""><span style="display:none;font-size:13px">${esc(p.icon)}</span></div>
+      <div class="tr-logo">${getFaviconHtml(p,20)}</div>
       <div class="tr-info">
         <div class="tr-name">${esc(p.name)}</div>
         <div class="tr-cat">${esc(p.cat)}</div>
