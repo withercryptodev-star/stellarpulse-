@@ -382,9 +382,7 @@ function badges(p){
   if(p.trust==='verified'){
     return '<span class="badge b-verified" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">✓ verified</span>';
   }
-  let h=p.status==='live'?'<span class="badge b-live">Live</span>':p.status==='beta'?'<span class="badge b-beta">Beta</span>':'<span class="badge b-new">New</span>';
-  if(p.audited) h+='<span class="badge b-audit">Audited</span>';
-  return h;
+  return '';
 }
 
 
@@ -453,7 +451,7 @@ function renderTable(list){
     const twLink=p.tw?`<a href="${safeUrl(p.tw)}" class="tr-link-btn tw" target="_blank" rel="noopener">${X_SVG} Twitter</a>`:'';
     const dcLink=p.dc?`<a href="${safeUrl(p.dc)}" class="tr-link-btn dc" target="_blank" rel="noopener">${DC_SVG} Discord</a>`:'';
     const siteLink=`<a href="${safeUrl(p.url)}" class="tr-link-btn site" target="_blank" rel="noopener">${SITE_SVG} Website</a>`;
-    const st=p.status==='live'?'<span class="badge b-live">Live</span>':p.status==='beta'?'<span class="badge b-beta">Beta</span>':'<span class="badge b-new">New</span>';
+    const st=p.trust==='verified'?'<span class="badge b-verified" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">\u2713 verified</span>':'';
     return `<div id="trw-${esc(p.id)}">
   <div class="tr-main" onclick="toggleRow('${esc(p.id)}')">
     <button class="tr-expand-btn" id="btn-${esc(p.id)}" onclick="event.stopPropagation();toggleRow('${esc(p.id)}')" title="Show links">▶</button>
