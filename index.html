@@ -5,7 +5,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzAyMDQwYSIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGM4ZmYiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiLz48dGV4dCB4PSIxNiIgeT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIxNyIgZmlsbD0iIzAwYzhmZiI+UzwvdGV4dD48L3N2Zz4=">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StellarMonitor — On-Chain Intelligence for Stellar</title>
-<meta name="description" content="Real-time monitoring of whale transfers, SDEX trades, Soroban events and anomalies on Stellar Network.">
+<meta name="description" content="Real-time monitoring of whale transfers, SDEX trades, smart contracts and anomalies on Stellar Network.">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -114,7 +114,7 @@ h1 .accent{color:var(--cyan)}
   <h1>On-chain<br><span class="outline">intelligence</span><br>for <span class="accent">Stellar</span></h1>
   <p class="hero-desc">
     Real-time monitoring of whale transfers,<br>
-    SDEX trades, Soroban events and anomalies.<br>
+    SDEX trades, smart contracts and anomalies.<br>
     Every alert verifiable on <a href="https://stellar.expert" target="_blank">stellar.expert</a>.
   </p>
   <div class="hero-ctas">
@@ -352,7 +352,7 @@ async function fetchStats(){
 }
 
 function buildTicker(){
-  const items=[['XLM','Stellar'],['USDC/AQUA','SDEX'],['Soroban','Active'],['Whale Alerts','24/7'],['Fee','0.00001 XLM'],['Accounts','10M+'],['TVL','$211M+']];
+  const items=[['XLM','Stellar'],['USDC/AQUA','SDEX'],['News','Live'],['Whale Alerts','24/7'],['Fee','0.00001 XLM'],['Accounts','10M+'],['TVL','$211M+']];
   const h=items.map(([l,v])=>`<div class="ti"><span>${l}</span><b>${v}</b><span class="u">▲</span></div>`).join('');
   $('tkr').innerHTML=h+h;
 }
