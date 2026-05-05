@@ -546,6 +546,16 @@ function render(){
   renderCats();
   document.querySelectorAll('.sort-btn').forEach(b=>b.classList.toggle('active',b.dataset.sort===S.sort));
   document.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',()=>{S.sort=b.dataset.sort;render();}));
+// Search input listener with debounce
+(function(){
+  const si=document.getElementById('search');
+  if(!si) return;
+  let t;
+  si.addEventListener('input',e=>{
+    clearTimeout(t);
+    t=setTimeout(()=>{S.search=e.target.value.trim();render();},200);
+  });
+})();
   S.view==='grid'?renderGrid(list):renderTable(list);
 }
 
