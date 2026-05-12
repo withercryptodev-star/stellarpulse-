@@ -33,19 +33,16 @@ A curated News section is now live at [stellarmonitor.xyz/news](https://stellarm
 
 ---
 
-## Milestone 2 — Stellar AI Integration
+## ~~Milestone 2 — Stellar AI Integration~~ — Not Planned
 
-Bring AI directly into the product. A conversational layer that lets anyone ask natural-language questions about Stellar on-chain activity and get instant, sourced answers.
+Originally scoped as an in-app AI assistant for Stellar developer Q&A. Removed after technical review.
 
-**Deliverables**
+**Why declined**
 
-- Natural language queries over on-chain data
-- AI-generated wallet summaries and risk reports
-- Automated anomaly detection and narrative context
-- Integration with LLM providers (Anthropic or open-source alternatives)
-- Chat interface available on the site and via Telegram bot
+Stella, the SDF's official Stellar AI assistant, is not distributed as an embeddable widget and exposes no public embed API, iframe endpoint, or JavaScript SDK for third-party sites. Building a parallel assistant would duplicate SDF's effort without offering anything Stella doesn't already do better on developers.stellar.org.
 
----
+StellarMonitor's edge is on-chain data, not chat over documentation. Resources redirected to Token Analytics, Smart Money Tracking, and Portfolio Tracker.
+
 
 ## Milestone 3 — Token Analytics
 
