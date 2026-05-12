@@ -43,6 +43,7 @@ Stella, the SDF's official Stellar AI assistant, is not distributed as an embedd
 
 StellarMonitor's edge is on-chain data, not chat over documentation. Resources redirected to Token Analytics, Smart Money Tracking, and Portfolio Tracker.
 
+---
 
 ## Milestone 3 — Token Analytics
 
